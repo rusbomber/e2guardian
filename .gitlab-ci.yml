@@ -27,14 +27,16 @@
 stages: 
     - build-amd64
 #                
-#                # Is performed before the scripts in the stages step
-#                #
 build-amd64:
     stage: build-amd64
-    image: amd64/debian:testing
+    image: amd64/debian:stable 
     script:
     - apt update
     - apt-get -y upgrade
-    - apt-get -y install apt-utils figlet build-essential devscripts debhelper
+    - apt install --no-install-recommends --no-install-suggests -y curl unzip base-files automake base-passwd 
+      bash coreutils dash debianutils diffutils dpkg e2fsprogs findutils grep gzip hostname ncurses-base 
+      libevent-pthreads-* libevent-dev ncurses-bin perl-base sed login sysvinit-utils tar bsdutils 
+      mount util-linux libc6-dev libc-dev gcc g++ make dpkg-dev autotools-dev debhelper dh-autoreconf dpatch 
+      libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl1.1 git ca-certificates lsb-release
     artifacts:
-        name: "hamara-welcome"
+        name: "e2guardian"
