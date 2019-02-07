@@ -1,42 +1,51 @@
-#/*
-## *.gitlab-ci.yml
-## * 
-## * Copyright 2018 Raju Devidas <raju@hamaralinux.org>
-## * 
-## * This program is free software; you can redistribute it and/or modify
-## * it under the terms of the GNU General Public License as published by
-## * the Free Software Foundation; either version 2 of the License, or
-## * (at your option) any later version.
-## * 
-## * This program is distributed in the hope that it will be useful,
-## * but WITHOUT ANY WARRANTY; without even the implied warranty of
-## * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## * GNU General Public License for more details.
-## * 
-## * You should have received a copy of the GNU General Public License
-## * along with this program; if not, write to the Free Software
-## * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-## * MA 02110-1301, USA.
-## * 
-## * 
-## */
-#
-#
-#
-## Defines stages which are to be executed
-stages: 
-    - build-amd64
-#                
-build-amd64:
-    stage: build-amd64
-    image: amd64/debian:stable 
-    script:
-    - apt update
-    - apt-get -y upgrade
-    - apt install --no-install-recommends --no-install-suggests -y curl unzip base-files automake base-passwd 
-      bash coreutils dash debianutils diffutils dpkg e2fsprogs findutils grep gzip hostname ncurses-base 
-      libevent-pthreads-* libevent-dev ncurses-bin perl-base sed login sysvinit-utils tar bsdutils 
-      mount util-linux libc6-dev libc-dev gcc g++ make dpkg-dev autotools-dev debhelper dh-autoreconf dpatch 
-      libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl1.1 git ca-certificates lsb-release
-    artifacts:
-        name: "e2guardian"
+stages:
+- build
+- create-package
+    
+Package Docker Image:
+  stage: build
+  image: amd64/debian:stable
+  artifacts:
+   - builds/
+  variables:
+  OS: "debian"
+   script:
+      - apt update
+      - apt-get -y upgrade
+      - apt install --no-install-recommends --no-install-suggests -y curl unzip base-files automake base-passwd
+        bash coreutils dash debianutils diffutils dpkg e2fsprogs findutils grep gzip hostname ncurses-base
+        libevent-pthreads-* libevent-dev ncurses-bin perl-base sed login sysvinit-utils tar bsdutils
+        mount util-linux libc6-dev libc-dev gcc g++ make dpkg-dev autotools-dev debhelper dh-autoreconf dpatch
+        libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl1.1 git ca-certificates lsb-release
+      - cd /builds/fredbcode/e2guardian && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian'
+        '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes'
+        '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info'
+        '--enable-pcre=yes' '--enable-sslmitm=yes' 'CPPFLAGS=-mno-sse2 -g -O2'
+      - make install && cp src/e2guardian /usr/sbin/ && mkdir /var/log/e2guardian
+        && mkdir -p /usr/share/e2guardian/languages && cp -Rf data/languages /usr/share/e2guardian/ && cp data/*.gif /usr/share/e2guardian/ && cp data/*swf /usr/share/e2guardian/
+        && cp -Rf configs/* /etc/e2guardian/
+        && adduser --no-create-home --system e2guardian
+        && addgroup --system e2guardian
+        
+Create Package:    
+  stage: create-package
+  dependencies:
+   - build 
+  variables:
+      VFULL: $(/usr/sbin/e2guardian -v | sed -n 1p | cut -d " " -f 2`)
+      OS: "debian"
+  script:
+    - apt upate
+    - apt install  --no-install-recommends --no-install-suggests -y git binutils
+  after_script:
+    - export SIZE=$(stat -c %s e2${OS}_package/data)
+    - echo ${SIZE}
+    - 'sed -i "s/Installed-Size:.*$/Installed-Size: $(SIZE)"/g" e2${OS}_package/control/control'
+  script:
+    - ce /builds
+    - git clone https://github.com/fredbcode/scripts
+    - cd scripts/${OS}_package && cp /usr/sbin/e2guardian e2${OS}_package/data/usr/sbin && cp -Rf /etc/e2guardian/* e2${OS}_package/data/etc/ && cp -rf /usr/share/e2guardian e2${OS}_package/data/usr/share
+    - find e2${OS}_package/ -type f -name Makefil* -delete
+    - find e2${OS}_package/ -type f -name *.in -delete
+    - cp /builds/fredbcode/e2guardian/data/scripts/e2guardian.service /builds/fredbcode/e2guardian/e2${OS}_package/data/lib/systemd/system
+    - cat e2"$OS"_package/control/control  ./rebuild.sh e2"$OS"_package
