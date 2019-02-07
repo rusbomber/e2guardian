@@ -27,7 +27,6 @@ Package Docker Image:
         && adduser --no-create-home --system e2guardian
         && addgroup --system e2guardian
         && make install
-
 Create Package:    
   stage: create-package
   dependencies:
