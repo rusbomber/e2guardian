@@ -34,10 +34,6 @@ Github: https://github.com/e2guardian
 
 Github: https://github.com/e2guardian/e2guardian/issues
 
-DepShield security badge:
-[![DepShield Badge](https://depshield.sonatype.org/badges/e2guardian/e2guardian/depshield.svg)](https://depshield.github.io)
-
-
 ## Community
 
 *	 Join the [Community
