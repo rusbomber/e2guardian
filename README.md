@@ -34,6 +34,9 @@ Github: https://github.com/e2guardian
 
 Github: https://github.com/e2guardian/e2guardian/issues
 
+Codacy Badge:
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/92742338bce249c6a52739d0343dabfa)](https://www.codacy.com/app/numsys/e2guardian?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=e2guardian/e2guardian&amp;utm_campaign=Badge_Grade)
+
 ## Community
 
 *	 Join the [Community
