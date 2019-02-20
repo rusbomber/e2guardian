@@ -768,14 +768,6 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
 	    {
                 s = logline;
             }
-	    std::cerr << "&&&&&&&&&&&&&& What ! = " << s << std::endl;
-
-	    if(o.myDebug->ICAP)
-	    {
-	        std::ostringstream oss (std::ostringstream::out);
-		oss << thread_id << "&&&&&&&&&&&&&& What ! = " << s << std::endl;
-		o.myDebug->Debug("ICAP",oss.str());
-	    }
 
             switch (itemcount) 
 	    {
@@ -799,12 +791,6 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
                     break;
                 case 6:
                     what = s;
-	    	    if(o.myDebug->ICAP)
-	            {
-	        	std::ostringstream oss (std::ostringstream::out);
-			oss << thread_id << "AAAAAAAAAAAAAAAAAA What ! = " << s << std::endl;
-			o.myDebug->Debug("ICAP",oss.str());
-		    }
                     break;
                 case 7:
                     how = s;
@@ -924,12 +910,6 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
             default:
                 stype.clear();
         }
- 	if(o.myDebug->ICAP)
-	{
-		std::ostringstream oss (std::ostringstream::out);
-		oss << thread_id << "BBBBBBBBBBBBBBBBB What ! = " << what << std::endl;
-		o.myDebug->Debug("ICAP",oss.str());
-	}
 
         if (isnaughty) {
             if (neterr)
