@@ -22,11 +22,9 @@ Package Docker Image Debian:
       libevent-pthreads-* libevent-dev ncurses-bin perl-base sed login sysvinit-utils tar bsdutils
       mount util-linux libc6-dev libc-dev gcc g++ make dpkg-dev autotools-dev debhelper dh-autoreconf dpatch
       libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl1.1 git ca-certificates lsb-release
-    - cd /builds/fredbcode/e2guardian && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian'
-      '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes'
-      '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info'
-      '--enable-pcre=yes' '--enable-sslmitm=yes' 'CPPFLAGS=-mno-sse2 -g -O2'
+    - cd /builds/fredbcode/e2guardian && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian' '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes' '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info' '--enable-pcre=yes' '--enable-sslmitm=yes' 'CPPFLAGS=-mno-sse2 -g -O2'
     - make 
+    - rm -rf .git
 
 Create Debian Package:
   stage: create-debian-package
@@ -36,7 +34,6 @@ Create Debian Package:
     PACKDST: "/builds/fredbcode/e2guardian/scripts/debian_package/e2debian_package"
     OS: "debian"
   script:
-    - rm -r ${PACKDST} 
     - cd /builds/fredbcode/e2guardian 
     - apt update && apt install --no-install-recommends --no-install-suggests -y curl git ca-certificates lsb-release util-linux binutils
     - git clone https://github.com/fredbcode/scripts
@@ -61,7 +58,7 @@ Create Debian Package:
     - git config --global user.email "${GITLAB_USER_EMAIL}"
     - git commit -m "Commit "$OS" ${CI_COMMIT_REF_NAME} Package" 
     - git push https://${YOUR_USERNAME}:${PERSONAL_ACCESS_TOKEN}@gitlab.com/fredbcode/e2guardian.git HEAD:packages
-    - rm -r *
+    - rm -rf *
 
 Package Docker Image Ubuntu:
   stage: build:ubuntu
@@ -81,6 +78,7 @@ Package Docker Image Ubuntu:
       libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl1.1 git ca-certificates lsb-release
     - cd /builds/fredbcode/e2guardian && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian' '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes' '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info' '--enable-pcre=yes' '--enable-sslmitm=yes' 'CPPFLAGS=-mno-sse2 -g -O2'
     - make 
+    - rm -rf .git 
 
 Create Ubuntu Package:
   stage: create-ubuntu-package
@@ -90,7 +88,6 @@ Create Ubuntu Package:
     PACKDST: "/builds/fredbcode/e2guardian/scripts/debian_package/e2ubuntu_package"
     OS: "ubuntu"
   script:
-    - rm -r ${PACKDST} 
     - cd /builds/fredbcode/e2guardian 
     - apt update && apt install --no-install-recommends --no-install-suggests -y curl git ca-certificates lsb-release util-linux binutils
     - git clone https://github.com/fredbcode/scripts
@@ -115,4 +112,4 @@ Create Ubuntu Package:
     - git config --global user.email "${GITLAB_USER_EMAIL}"
     - git commit -m "Commit "$OS" ${CI_COMMIT_REF_NAME} Package" 
     - git push https://${YOUR_USERNAME}:${PERSONAL_ACCESS_TOKEN}@gitlab.com/fredbcode/e2guardian.git HEAD:packages
-    - rm -r *
+    - rm -rf *
