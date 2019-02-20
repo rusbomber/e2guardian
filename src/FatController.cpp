@@ -917,7 +917,10 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
             else
                 what = denied_word + stype + "* " + what;
         } else if ((what == "-" || isexception) && (o.log_exception_hits == 2)) {
-            what = exception_word + what;
+		// Log grey site without naughty things 
+		if (what == "-")
+			what = "GREY";
+        	what = exception_word + what;
         }
 
         if (wasinfected)
