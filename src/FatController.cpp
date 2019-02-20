@@ -756,15 +756,29 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
         std::shared_ptr <LOptionContainer> ldl;
         ldl = o.currentLists();
 
-        while (std::getline(iss, logline)) {
+        while (std::getline(iss, logline)) 
+	{
             // Loop around reading in data, because we might have huge URLs
             std::string s;
-            if (logline == "") {
+            if (logline == "") 
+	    {
                 s = "-";
-            } else {
+            } 
+	    else 
+	    {
                 s = logline;
             }
-            switch (itemcount) {
+	    std::cerr << "&&&&&&&&&&&&&& What ! = " << s << std::endl;
+
+	    if(o.myDebug->ICAP)
+	    {
+	        std::ostringstream oss (std::ostringstream::out);
+		oss << thread_id << "&&&&&&&&&&&&&& What ! = " << s << std::endl;
+		o.myDebug->Debug("ICAP",oss.str());
+	    }
+
+            switch (itemcount) 
+	    {
                 case 0:
                     isexception = atoi(logline.c_str());
                     break;
@@ -785,6 +799,12 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
                     break;
                 case 6:
                     what = s;
+	    	    if(o.myDebug->ICAP)
+	            {
+	        	std::ostringstream oss (std::ostringstream::out);
+			oss << thread_id << "AAAAAAAAAAAAAAAAAA What ! = " << s << std::endl;
+			o.myDebug->Debug("ICAP",oss.str());
+		    }
                     break;
                 case 7:
                     how = s;
@@ -904,13 +924,19 @@ void log_listener(std::string log_location, bool logconerror, bool logsyslog) {
             default:
                 stype.clear();
         }
+ 	if(o.myDebug->ICAP)
+	{
+		std::ostringstream oss (std::ostringstream::out);
+		oss << thread_id << "BBBBBBBBBBBBBBBBB What ! = " << what << std::endl;
+		o.myDebug->Debug("ICAP",oss.str());
+	}
 
         if (isnaughty) {
             if (neterr)
                 what = neterr_word + what;
             else
                 what = denied_word + stype + "* " + what;
-        } else if (isexception && (o.log_exception_hits == 2)) {
+        } else if ((what == "-" || isexception) && (o.log_exception_hits == 2)) {
             what = exception_word + what;
         }
 
