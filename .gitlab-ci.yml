@@ -3,6 +3,8 @@ stages:
 - create-debian-package
 - build:ubuntu
 - create-ubuntu-package
+- build:raspbian
+- create-raspbian-package
 
 Package Docker Image Debian:
   stage: build:debian
@@ -137,7 +139,7 @@ Package Docker Image Raspbian:
     - rm -rf .git
 
 Create Raspbian Package:
-  stage: create-rasbian-package
+  stage: create-raspbian-package
   image: amd64/debian:stable
   variables:
     PACKPATH: "/builds/fredbcode/e2guardian"
