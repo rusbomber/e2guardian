@@ -81,6 +81,8 @@
 "520","Blocked HTTPS site: "    # needs translation
 "521","Banned Search Words: "    # needs translation
 "522","Blocked User-Agent: "    # needs translation
+"523","Banned Regular Expression HTTP header: " # needs translation
+"524","Allowed Regular Expression HTTP header: " # needs translation
 "560","Blocked site (local): "    # needs translation
 "561","Blocked URL (local): "    # needs translation
 "580","Blocked HTTPS site (local): "    # needs translation

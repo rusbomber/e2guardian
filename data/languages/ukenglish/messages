@@ -76,6 +76,8 @@
 "520","Blocked HTTPS site: "
 "521","Banned Search Words: "
 "522","Blocked User-Agent: "
+"523","Banned Regular Expression HTTP header: "
+"524","Allowed Regular Expression HTTP header: "
 "560","Blocked site (local): "
 "561","Blocked URL (local): "
 "580","Blocked HTTPS site (local): "
