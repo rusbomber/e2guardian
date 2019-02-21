@@ -154,8 +154,8 @@ maxuploadsize = -1
 # block.
 # Use for example, to remove cookies or prevent certain user-agents.
 regexpreplacelist = 'name=headermods,path=@DGCONFDIR@/lists/headerregexplist'
-regexpboollist = 'name=bannedheader,path=@DGCONFDIR@/lists/bannedregexpheaderlist'
-regexpboollist = 'name=exceptionheader,path=@DGCONFDIR@/lists/exceptionregexpheaderlist'
+regexpboollist = 'name=bannedheader,messageno=523,path=@DGCONFDIR@/lists/bannedregexpheaderlist'
+regexpboollist = 'name=exceptionheader,messageno=524,path=@DGCONFDIR@/lists/exceptionregexpheaderlist'
 # used for Youtube add cookies etc
 regexpreplacelist = 'name=addheader,path=@DGCONFDIR@/lists/addheaderregexplist'
 
