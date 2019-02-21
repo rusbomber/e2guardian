@@ -125,7 +125,7 @@ Package Docker Image Raspbian:
     - /builds   
   image: amd64/debian:stable
   variables:
-    OS: "debian" 
+    OS: "rasbian" 
   script:
     - apt update
     - apt-get -y upgrade
@@ -134,7 +134,7 @@ Package Docker Image Raspbian:
       libevent-pthreads-* libevent-dev ncurses-bin perl-base sed login sysvinit-utils tar bsdutils
       mount util-linux libc6-dev libc-dev gcc g++ make dpkg-dev autotools-dev debhelper dh-autoreconf dpatch
       libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl1.1 git ca-certificates lsb-release gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
-    - cd /builds/fredbcode/e2guardian && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian' '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes' '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info' '--enable-pcre=yes' '--enable-sslmitm=yes' 'CPPFLAGS=-mno-sse2 -g -O2'
+    - cd /builds/fredbcode/e2guardian && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian' '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes' '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info' '--enable-pcre=yes' '--enable-sslmitm=yes'
     - make ARCH=arm CROSS_COMPIL=arm-linux-gnueabi-
     - rm -rf .git
 
@@ -143,7 +143,7 @@ Create Raspbian Package:
   image: amd64/debian:stable
   variables:
     PACKPATH: "/builds/fredbcode/e2guardian"
-    PACKDST: "/builds/fredbcode/e2guardian/scripts/debain_package/e2raspbian_package"
+    PACKDST: "/builds/fredbcode/e2guardian/scripts/debian_package/e2raspbian_package"
     OS: "raspbian"
   script:
     - cd /builds/fredbcode/e2guardian 
