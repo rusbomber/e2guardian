@@ -159,7 +159,8 @@ Create Raspbian Package:
     PACKDST: "/builds/fredbcode/e2guardian/scripts/debian_package/e2raspbian_package"
     OS: "raspbian"
   script:
-    - cd /builds/fredbcode/e2guardian 
+    - cd /builds/fredbcode/e2guardian
+    - sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list 
     - apt update && apt install --no-install-recommends --no-install-suggests -y curl git ca-certificates lsb-release util-linux binutils
     - git clone https://github.com/fredbcode/scripts
     - cp ${PACKPATH}/src/e2guardian ${PACKDST}/data/usr/sbin/e2guardian
