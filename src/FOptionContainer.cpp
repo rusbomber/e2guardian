@@ -718,6 +718,11 @@ bool FOptionContainer::read(const char *filename) {
         return false;
     }
     if (bypass_version == 0) bypass_version = 1;   //default
+    // bypass_version is really necessary ?
+    if (bypass_version == 1) {
+	    bypass_v2 = true;   //default
+	    cgi_bypass = false;
+    }
     if (bypass_version == 2) bypass_v2 = true;   //default
 
     bypass_mode = findoptionI("bypass");
