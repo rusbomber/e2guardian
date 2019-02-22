@@ -127,7 +127,9 @@ Package Docker Image Raspbian:
   variables:
     OS: "rasbian" 
   script:
-    - sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list 
+    - echo "deb-src http://deb.debian.org/debian stretch main" >> /etc/apt/sources.list 
+    - echo "deb-src http://deb.debian.org/debian-security/ stretch/updates main" >> /etc/apt/sources.list 
+    - echo "deb-src http://deb.debian.org/debian stretch-updates main" >> /etc/apt/sources.list 
     - apt update
     - apt-get -y upgrade
     - apt install --no-install-recommends --no-install-suggests -y curl unzip base-files automake base-passwd
