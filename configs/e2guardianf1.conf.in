@@ -154,8 +154,8 @@ maxuploadsize = -1
 # block.
 # Use for example, to remove cookies or prevent certain user-agents.
 regexpreplacelist = 'name=headermods,path=@DGCONFDIR@/lists/headerregexplist'
-regexpboollist = 'name=bannedheader,messageno=523,path=@DGCONFDIR@/lists/bannedregexpheaderlist'
-regexpboollist = 'name=exceptionheader,messageno=524,path=@DGCONFDIR@/lists/exceptionregexpheaderlist'
+regexpboollist = 'name=bannedheader,path=@DGCONFDIR@/lists/bannedregexpheaderlist'
+regexpboollist = 'name=exceptionheader,path=@DGCONFDIR@/lists/exceptionregexpheaderlist'
 # used for Youtube add cookies etc
 regexpreplacelist = 'name=addheader,path=@DGCONFDIR@/lists/addheaderregexplist'
 
@@ -285,9 +285,9 @@ bypass = 0
 # can be 1 or 2
 # Always use v2 unless you have old style cgi hash generation in use
 # Default is 1
-# bypassversion = 2
+# bypassversion = 1
 
-# cgibypass - Use a separate program/CGI to (in v1 generate) or (in v2 validate) link
+# cgibypass - Use a separate program/CGI in v2 validate link
 # 'on' or 'off' (default)
 # cgibypass = 'off'
 
