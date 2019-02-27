@@ -115,6 +115,7 @@ void HTMLTemplate::display_hb(String &ebody, String *url, std::string &reason, s
         // preserve newlines from original file
         newline = false;
         line = html[i];
+	syslog(LOG_ERR, "fred line value %s", line.c_str());
         // look for placeholders (split onto their own line by readTemplateFile) and replace them
         if (line == "-URL-") {
             if (!safe) {
