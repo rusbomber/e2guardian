@@ -1261,7 +1261,7 @@ int ConnectionHandler::handleConnection(Socket &peerconn, String &ip, bool ismit
 
 #ifdef __SSLMITM
             //if ismitm - GO MITM
-            // check ssl_grey is covered in storyboard
+            // ssl_grey is covered in storyboard
             if (!checkme.tunnel_rest && checkme.isconnect && checkme.gomitm)
             {
 #ifdef DGDEBUG
@@ -2501,10 +2501,8 @@ ConnectionHandler::goMITM(NaughtyFilter &checkme, Socket &proxysock, Socket &pee
     HTTPHeader *docheader = checkme.response_header;
     bool justLog = false;
 
-//Do the connect request - already done
-
 //  CA intialisation now Moved into OptionContainer so now done once on start-up
-//  instead off on every request
+//  instead of on every request
 
     X509 *cert = NULL;
     struct ca_serial caser;
@@ -2600,9 +2598,6 @@ ConnectionHandler::goMITM(NaughtyFilter &checkme, Socket &proxysock, Socket &pee
 #endif
             std::string certpath = std::string(o.ssl_certificate_path);
             if (proxysock.startSslClient(certpath, checkme.urldomain)) {
-//make sure the ssl stuff is shutdown properly so we display the old ssl blockpage
-//    proxysock.stopSsl();
-
                 checkme.isItNaughty = true;
 //checkme.whatIsNaughty = "Failed to negotiate ssl connection to server";
                 checkme.message_no = 160;
@@ -2633,7 +2628,6 @@ ConnectionHandler::goMITM(NaughtyFilter &checkme, Socket &proxysock, Socket &pee
         std::cerr << thread_id << " nf " << checkme.isItNaughty <<
                 " upfail " << checkme.upfailure << std::endl;
 #endif
-//handleConnection inside the ssl tunnel
     if ((!checkme.isItNaughty) && (!checkme.upfailure)) {
         bool writecert = true;
         if (!certfromcache) {
@@ -2656,6 +2650,7 @@ ConnectionHandler::goMITM(NaughtyFilter &checkme, Socket &proxysock, Socket &pee
             persistent_authed = true;
         }
 
+//handleConnection inside the ssl tunnel
         handleConnection(peerconn, ip, true, proxysock, dystat);
 #ifdef DGDEBUG
         std::cerr << thread_id << " -Handling connections inside ssl tunnel: done" << std::endl;
@@ -3219,7 +3214,6 @@ std::cerr << thread_id << " -got peer connection - clientip is " << clientip << 
 #endif
             checkme.isItNaughty = checkme.isBlocked;
             bool isbannedip = checkme.isBlocked;
-            //bool part_banned;
 
             //
             //
@@ -3228,7 +3222,6 @@ std::cerr << thread_id << " -got peer connection - clientip is " << clientip << 
             //
             // don't have credentials for this connection yet? get some!
             overide_persist = false;
-            //filtergroup = o.default_trans_fg;
             if(!(checkme.isItNaughty || checkme.isexception)) {
                 if (!doAuth(checkme.auth_result, authed, filtergroup, auth_plugin,  peerconn, proxysock,  header, true, true))
                 {
@@ -3366,11 +3359,6 @@ std::cerr << thread_id << " -got peer connection - clientip is " << clientip << 
             }
 
             // it is not possible to send splash page on Thttps without MITM so do not try!
-            //if(checkme.hasSNI && checkme.isItNaughty) {
-           //     denyAccess(&peerconn,&proxysock, &header, &docheader, &checkme.url, &checkme, &clientuser, &clientip,
-            //               filtergroup, checkme.ispostblock,checkme.headersent, checkme.wasinfected, checkme.scanerror);
-                    //persistPeer = false;
-            //}
 
             //Log
             if (!checkme.isourwebserver) { // don't log requests to the web server
