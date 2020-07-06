@@ -10,6 +10,8 @@
 #include "FatController.hpp"
 #include "SysV.hpp"
 #include "Queue.hpp"
+#include "Logger.hpp"
+#include "LoggerConfigurator.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -23,6 +25,7 @@
 #include <fstream>
 #include <fcntl.h>
 #include <locale.h>
+#include <string>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/times.h>
@@ -38,6 +41,7 @@
 OptionContainer o;
 thread_local std::string thread_id;
 
+LoggerConfigurator loggerConfig(&__logger);
 bool is_daemonised;
 
 // regexp used during URL decoding by HTTPHeader
@@ -60,17 +64,16 @@ void read_config(std::string& configfile, int type);
 //void read_config(const char *configfile, int type)
 void read_config(std::string& configfile, int type)
 {
+    logger_trace("Read configfile: ", configfile);
     int rc = open(configfile.c_str(), 0, O_RDONLY);
     if (rc < 0) {
-        syslog(LOG_ERR, "Error opening %s", configfile.c_str());
-        std::cerr << "Error opening " << configfile.c_str() << std::endl;
+        logger_error("Error opening ", configfile);
         exit(1); // could not open conf file for reading, exit with error
     }
     close(rc);
 
     if (!o.read(configfile, type)) {
-        syslog(LOG_ERR, "%s", "Error parsing the e2guardian.conf file or other e2guardian configuration files");
-        std::cerr << "Error parsing the e2guardian.conf file or other e2guardian configuration files" << std::endl;
+        logger_error( "Error parsing the e2guardian.conf file or other e2guardian configuration files");
         exit(1); // OptionContainer class had an error reading the conf or other files so exit with error
     }
 }
@@ -87,16 +90,19 @@ int main(int argc, char *argv[])
     srand(time(NULL));
     int rc;
 
-    openlog(prog_name.c_str(), LOG_PID | LOG_CONS, LOG_USER);
+    __logger.setSyslogName("e2guardian");
+#if E2DEBUG
+    __logger.enable(LoggerSource::debug);
+#endif    
 
-#ifdef E2DEBUG
-    std::cout << "Running in debug mode..." << std::endl;
-#endif
+    logger_info("Start ", prog_name );
+    logger_debug("Running in debug_mode...");
 
 #ifdef __BENCHMARK
     char benchmark = '\0';
 #endif
 
+    // parse Options
     for (int i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
             for (unsigned int j = 1; j < strlen(argv[i]); j++) {
@@ -145,6 +151,12 @@ int main(int argc, char *argv[])
                 case 'i':
                     total_block_list = true;
                     break;
+                case 'l':
+                    if ((i + 1) < argc) {
+                        loggerConfig.configure(argv[i+1]);
+                    };
+                    break;
+
                 case 'h':
                     std::cout << "Usage: " << argv[0] << " [{-c ConfigFileName|-v|-P|-h|-N|-q|-s|-r|-g|-i}]" << std::endl;
                     std::cout << "  -v gives the version number and build options." << std::endl;
@@ -192,24 +204,17 @@ int main(int argc, char *argv[])
     read_config(configfile, 2);
 
     if ( ! o.name_suffix.empty() ) {
-      prog_name += o.name_suffix;
-      closelog();
-      openlog(prog_name.c_str(), LOG_PID | LOG_CONS, LOG_USER);
+        __logger.setSyslogName(prog_name + o.name_suffix);
     }
 
     if (total_block_list && !o.readinStdin()) {
-        syslog(LOG_ERR, "%s", "Error on reading total_block_list");
-        std::cerr << "Error on reading total_block_list" << std::endl;
+        logger_error("Error on reading total_block_list");
 //		return 1;
-#ifdef E2DEBUG
-        std::cerr << "Total block lists read OK from stdin." << std::endl;
-
-#endif
+        logger_debug("Total block lists read OK from stdin.");
     }
 
     if(!o.createLists(0))  {
-        std::cerr << "Error reading filter group conf file(s)." << std::endl;
-        syslog(LOG_ERR, "%s", "Error reading filter group conf file(s).");
+        logger_error("Error reading filter group conf file(s).");
         return 1;
     }
 
@@ -301,8 +306,7 @@ int main(int argc, char *argv[])
 #endif
 
     if (sysv_amirunning(o.pid_filename)) {
-        syslog(LOG_ERR, "%s", "I seem to be running already!");
-        std::cerr << "I seem to be running already!" << std::endl;
+        logger_error("I seem to be running already!");
         return 1; // can't have two copies running!!
     }
 
@@ -319,7 +323,7 @@ int main(int argc, char *argv[])
 
     struct rlimit rlim;
     if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-        syslog(LOG_ERR, "getrlimit call returned %d error", errno);
+        logger_error( "getrlimit call returned error: ", errno);
         return 1;
     }
     int max_maxchildren;
@@ -354,10 +358,8 @@ int main(int argc, char *argv[])
     if ((sg = getgrnam(o.daemon_group_name.c_str())) != 0) {
         o.proxy_group = sg->gr_gid;
     } else {
-        syslog(LOG_ERR, "Unable to getgrnam(): %s", strerror(errno));
-        syslog(LOG_ERR, "Check the group that e2guardian runs as (%s)", o.daemon_group_name.c_str());
-        std::cerr << "Unable to getgrnam(): " << strerror(errno) << std::endl;
-        std::cerr << "Check the group that e2guardian runs as (" << o.daemon_group_name.c_str() << ")" << std::endl;
+        logger_error( "Unable to getgrnam(): ", strerror(errno));
+        logger_error("Check the group that e2guardian runs as (", o.daemon_group_name, ")");
         return 1;
     }
 
@@ -367,8 +369,7 @@ int main(int argc, char *argv[])
         rc = setgid(o.proxy_group); // change to rights of proxy user group
         // i.e. low - for security
         if (rc == -1) {
-            syslog(LOG_ERR, "%s", "Unable to setgid()");
-            std::cerr << "Unable to setgid()" << std::endl;
+            logger_error("Unable to setgid()");
             return 1; // setgid failed for some reason so exit with error
         }
 #ifdef HAVE_SETREUID
@@ -378,8 +379,7 @@ int main(int argc, char *argv[])
 // (yes it negates but no choice)
 #endif
         if (rc == -1) {
-            syslog(LOG_ERR, "Unable to seteuid()");
-            std::cerr << "Unable to seteuid()" << std::endl;
+            logger_error("Unable to seteuid()");
             return 1; // seteuid failed for some reason so exit with error
         }
     } else {
@@ -413,6 +413,7 @@ int main(int argc, char *argv[])
     // this is no longer a class, but the comment has been retained for historical reasons. PRA 03-10-2005
     //FatController f;  // Thomas The Tank Engine
 
+    logger_trace("Starting Main loop");
     while (true) {
         rc = fc_controlit();
         // its a little messy, but I wanted to split
@@ -430,28 +431,18 @@ int main(int argc, char *argv[])
             rc = seteuid(rootuid);
 #endif
             if (rc == -1) {
-                syslog(LOG_ERR, "%s", "Unable to seteuid() to read conf files.");
-#ifdef E2DEBUG
-                std::cerr << "Unable to seteuid() to read conf files." << std::endl;
-#endif
+                logger_error("Unable to seteuid() to read conf files.");
                 return 1;
             }
-#ifdef E2DEBUG
-            std::cout << "About to re-read conf file." << std::endl;
-#endif
+            logger_trace("About to re-read conf file.");
             o.reset();
             if (!o.read(configfile, 2)) {
-                syslog(LOG_ERR, "%s", "Error re-parsing the e2guardian.conf file or other e2guardian configuration files");
-#ifdef E2DEBUG
-                std::cerr << "Error re-parsing the e2guardian.conf file or other e2guardian configuration files" << std::endl;
-#endif
-                return 1;
                 // OptionContainer class had an error reading the conf or
                 // other files so exit with error
+                logger_error("Error re-parsing the e2guardian.conf file or other e2guardian configuration files");
+                return 1;
             }
-#ifdef E2DEBUG
-            std::cout << "conf file read." << std::endl;
-#endif
+            logger_trace("conf file read.");
 
             if (nodaemon) {
                 o.no_daemon = 1;
@@ -467,23 +458,17 @@ int main(int argc, char *argv[])
 #endif
 
             if (rc == -1) {
-                syslog(LOG_ERR, "%s", "Unable to re-seteuid()");
-#ifdef E2DEBUG
-                std::cerr << "Unable to re-seteuid()" << std::endl;
-#endif
+                logger_error("Unable to re-seteuid()");
                 return 1; // seteuid failed for some reason so exit with error
             }
             continue;
         }
 
-        if (rc > 0) {
-            if (!is_daemonised) {
-                std::cerr << "Exiting with error" << std::endl;
-            }
-            syslog(LOG_ERR, "%s", "Exiting with error");
-            return rc; // exit returning the error number
-        }
         if (is_daemonised)
         	return 0; // exit without error
+        if (rc > 0) {
+            logger_error("Exiting with error");
+            return rc; // exit returning the error number
+        }
     }
 }
