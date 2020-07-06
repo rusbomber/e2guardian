@@ -75,6 +75,10 @@ bool StoryBoard::readFile(const char *filename, ListMeta &LM, bool is_top) {
         logger_error("Error opening Storyboard file (does it exist?): ", filename);
         return false;
     }
+
+    String base_dir(filename);
+    base_dir.baseDir();
+
     bool caseinsensitive = true;
     unsigned int line_no = 0;
     while (!listfile.eof()) { // keep going until end of file
@@ -93,6 +97,7 @@ bool StoryBoard::readFile(const char *filename, ListMeta &LM, bool is_top) {
         if (line.startsWith(".")) {
             temp = line.after(".Include<").before(">");
             if (temp.length() > 0) {
+                temp.fullPath(base_dir);
                 if (!readFile(temp.toCharArray(), *LMeta, false)) {
                     listfile.close();
                     return false;
