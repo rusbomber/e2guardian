@@ -134,14 +134,10 @@ int portinstance::determineGroup(std::string &user, int &pfg, ListContainer &ugl
     fg = inList(s.toInteger());
     if (fg >= 0) {
         pfg = fg;
-#ifdef E2DEBUG
-        std::cerr << thread_id << "Matched port " << user << " to port list" << std::endl;
-#endif
+        logger_debug("Matched port ", user, " to port list");
         return E2AUTH_OK;
     }
-#ifdef E2DEBUG
-    std::cerr << thread_id << "Matched port " << user << " to nothing" << std::endl;
-#endif
+    logger_debug("Matched port ", user, " to nothing");
     return E2AUTH_NOMATCH;
 }
 #endif
@@ -185,10 +181,7 @@ int portinstance::readIPMelangeList(const char *filename)
     // load in the list file
     std::ifstream input(filename);
     if (!input) {
-        if (!is_daemonised) {
-            std::cerr << thread_id << "Error reading file (does it exist?): " << filename << std::endl;
-        }
-        syslog(LOG_ERR, "%s%s", "Error reading file (does it exist?): ", filename);
+        logger_error("Error reading file (does it exist?): ", filename);
         return -1;
     }
 
@@ -214,20 +207,14 @@ int portinstance::readIPMelangeList(const char *filename)
             key.removeWhiteSpace();
             value = line.after("filter");
         } else {
-            if (!is_daemonised)
-                std::cerr << thread_id << "No filter group given; entry " << line << " in " << filename << std::endl;
-            syslog(LOG_ERR, "No filter group given; entry %s in %s", line.toCharArray(), filename);
+            logger_error("No filter group given; entry ", line, " in ", filename);
             warn = true;
             continue;
         }
-#ifdef E2DEBUG
-        std::cerr << thread_id << "key: " << key << std::endl;
-        std::cerr << thread_id << "value: " << value.toInteger() << std::endl;
-#endif
+
+        logger_debug("key: ", key, "value: ", value );
         if ((value.toInteger() < 1) || (value.toInteger() > o.filter_groups)) {
-            if (!is_daemonised)
-                std::cerr << thread_id << "Filter group out of range; entry " << line << " in " << filename << std::endl;
-            syslog(LOG_ERR, "Filter group out of range; entry %s in %s", line.toCharArray(), filename);
+            logger_error("Filter group out of range; entry ", line, " in ", filename);
             warn = true;
             continue;
         }
@@ -240,23 +227,19 @@ int portinstance::readIPMelangeList(const char *filename)
         }
         // hmmm. the key didn't match any of our regular expressions. output message & return a warning value.
         else {
-            if (!is_daemonised)
-                std::cerr << thread_id << "Entry " << line << " in " << filename << " was not recognised as an port " << std::endl;
-            syslog(LOG_ERR, "Entry %s in %s was not recognised as an port", line.toCharArray(), filename);
+            logger_error("Entry ", line, " in ", filename, " was not recognised as an port ");
             warn = true;
         }
     }
     input.close();
+    logger_debug("starting sort");
+    //	std::sort(ipportlist.begin(), ipportlist.end());
 #ifdef E2DEBUG
-    std::cerr << thread_id << "starting sort" << std::endl;
-#endif
-//	std::sort(ipportlist.begin(), ipportlist.end());
-#ifdef E2DEBUG
-    std::cerr << thread_id << "sort complete" << std::endl;
-    std::cerr << thread_id << "port list dump:" << std::endl;
+    logger_debug("sort complete");
+    logger_debug("port list dump:");
     std::deque<portstruct>::iterator i = ipportlist.begin();
     while (i != ipportlist.end()) {
-        std::cerr << thread_id << "port: " << i->port << " Group: " << i->group << std::endl;
+        logger_debug("port: ", i->port, " Group: ", i->group);
         i++;
     }
 #endif

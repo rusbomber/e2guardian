@@ -65,7 +65,8 @@ void OptionContainer::deletePlugins(std::deque<Plugin *> &list) {
 
 
 bool OptionContainer::readConfFile(const char *filename, String &list_pwd) {
-    LoggerConfigurator loggerConf(&__logger);
+    LoggerConfigurator loggerConf(&logger);
+    logger_config("read Configfile: ", filename);
     std::string linebuffer;
     String temp; // for tempory conversion and storage
     String now_pwd(list_pwd);
@@ -96,8 +97,8 @@ bool OptionContainer::readConfFile(const char *filename, String &list_pwd) {
                 }
                 linebuffer = temp.toCharArray();
 
-                if (temp.find(LoggerConfigurator::PREFIX) == 0)
-                    loggerConf.configure(temp);
+    //            if (temp.find(LoggerConfigurator::PREFIX) == 0)
+    //                loggerConf.configure(temp);
 
                 conffile.push_back(linebuffer); // stick option in deque
             }
@@ -763,8 +764,8 @@ bool OptionContainer::read(std::string &filename, int type) {
         if (default_fg > 0) {
             if (default_fg <= filter_groups) {
                 default_fg--;
-            } else {
-                syslog(LOG_ERR, "defaultfiltergroup out of range");
+            } else  {
+                logger_error("defaultfiltergroup out of range");
                 return false;
             }
         }
@@ -773,8 +774,8 @@ bool OptionContainer::read(std::string &filename, int type) {
         if (default_trans_fg > 0) {
             if (default_trans_fg <= filter_groups) {
                 default_trans_fg--;
-            } else {
-                syslog(LOG_ERR, "defaulttransparentfiltergroup out of range");
+            } else  {
+                logger_error("defaulttransparentfiltergroup out of range");
                 return false;
             }
         }
@@ -783,8 +784,8 @@ bool OptionContainer::read(std::string &filename, int type) {
         if (default_icap_fg > 0) {
             if (default_icap_fg <= filter_groups) {
                 default_icap_fg--;
-            } else {
-                syslog(LOG_ERR, "defaulticapfiltergroup out of range");
+            } else  {
+                logger_error("defaulticapfiltergroup out of range");
                 return false;
             }
         }
@@ -797,9 +798,7 @@ bool OptionContainer::read(std::string &filename, int type) {
 
         if (findoptionS("storyboardtrace") == "on")
         {
-            logger_info("Enable Storyboard tracing !!");
             SB_trace = true;
-            __logger.enable(LoggerSource::story);
         } else {
             SB_trace = false;
         }
@@ -894,6 +893,7 @@ bool OptionContainer::read(std::string &filename, int type) {
         //     banned_ip_list_location = findoptionS("bannediplist");
         group_names_list_location = findoptionS("groupnamesfile");
         std::string language_list_location(languagepath + "messages");
+
         iplist_dq = findoptionM("iplist");
         sitelist_dq = findoptionM("sitelist");
         ipsitelist_dq = findoptionM("ipsitelist");
@@ -921,6 +921,7 @@ bool OptionContainer::read(std::string &filename, int type) {
 
 #ifdef _SSLMITM
         if (enable_ssl) {
+            logger_config("enable SSL");
             if (ca_certificate_path != "") {
                 ca = new CertificateAuthority(ca_certificate_path.c_str(),
                     ca_private_key_path.c_str(),
@@ -938,11 +939,15 @@ bool OptionContainer::read(std::string &filename, int type) {
         logger_error(e.what());
         return false;
     }
+    logger_config("Done: read Configfile: ", filename);
     return true;
 }
 
 
-bool OptionContainer::readinStdin() {
+bool OptionContainer::readinStdin()
+{
+    logger_trace("");
+    
     if (!std::cin.good()) {
         logger_error("Error reading stdin");
         return false;
@@ -950,9 +955,8 @@ bool OptionContainer::readinStdin() {
     std::string linebuffer;
     String temp;
     while (!std::cin.eof()) {
-        //   std::cerr << "wiating for stdin" << std::endl;
         getline(std::cin, linebuffer);
-        //    std::cerr << "Line in: " << linebuffer << std::endl;
+        logger_debug("Line in: ", linebuffer) ;
         if (linebuffer.length() < 2)
             continue; // its jibberish
 
@@ -1040,6 +1044,7 @@ std::string OptionContainer::findoptionS(const char *option) {
             if (temp.endsWith("'")) { // inverted commas
                 temp.chop();
             }
+            logger_config(o, "=", temp);
             return temp.toCharArray();
         }
     }
@@ -1075,6 +1080,7 @@ std::deque<String> OptionContainer::findoptionM(const char *option) {
             if (temp.endsWith("'")) { // inverted commas
                 temp.chop();
             }
+            logger_config(o, "=" ,temp);
             results.push_back(temp);
         }
     }
@@ -1092,7 +1098,9 @@ bool OptionContainer::realitycheck(long int l, long int minl, long int maxl, con
 }
 
 
-bool OptionContainer::loadDMPlugins() {
+bool OptionContainer::loadDMPlugins()
+{
+    logger_config("load Download manager plugins");
     std::deque<String> dq = findoptionM("downloadmanager");
     unsigned int numplugins = dq.size();
     if (numplugins < 1) {
@@ -1105,7 +1113,7 @@ bool OptionContainer::loadDMPlugins() {
         logger_debug("loading download manager config: ", config);
         DMPlugin *dmpp = dm_plugin_load(config.toCharArray());
         if (dmpp == NULL) {
-            logger_error("dm_plugin_load() returned NULL pointer with config file: %s", config);
+            logger_error("dm_plugin_load() returned NULL pointer with config file: ", config);
             return false;
         }
         bool lastplugin = (i == (numplugins - 1));
@@ -1124,7 +1132,9 @@ bool OptionContainer::loadDMPlugins() {
     return true;
 }
 
-bool OptionContainer::loadCSPlugins() {
+bool OptionContainer::loadCSPlugins()
+{
+    logger_config("load Content scanner plugins");
     std::deque<String> dq = findoptionM("contentscanner");
     unsigned int numplugins = dq.size();
     if (numplugins < 1) {
@@ -1156,7 +1166,9 @@ bool OptionContainer::loadCSPlugins() {
     return true;
 }
 
-bool OptionContainer::loadAuthPlugins() {
+bool OptionContainer::loadAuthPlugins()
+{
+    logger_config("load Auth plugins");
     // Assume no auth plugins need an upstream proxy query (NTLM, BASIC) until told otherwise
     auth_needs_proxy_query = false;
 
@@ -1201,8 +1213,9 @@ bool OptionContainer::loadAuthPlugins() {
 }
 
 
-bool OptionContainer::createLists(int load_id) {
-    std::shared_ptr<LOptionContainer> temp(new LOptionContainer(load_id));
+bool OptionContainer::createLists(int load_id)  {
+    logger_config("create Lists: ", load_id);
+    std::shared_ptr<LOptionContainer> temp (new LOptionContainer(load_id));
     if (temp->loaded_ok) {
         current_LOC = temp;
         return true;

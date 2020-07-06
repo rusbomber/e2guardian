@@ -11,16 +11,13 @@
 #include "e2config.h"
 #endif
 #include "DynamicIPList.hpp"
+#include "Logger.hpp"
 
-#include <syslog.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
 #include <stdio.h>
 #include <string>
-#ifdef E2DEBUG
-#include <iostream>
-#endif
 
 // GLOBALS
 extern thread_local std::string thread_id;
@@ -82,13 +79,13 @@ void DynamicIPList::purgeOldEntries()
 int DynamicIPList::posInList(unsigned long int ip)
 {
 #ifdef E2DEBUG
-    std::cerr << thread_id << "****** ip cache table ******" << std::endl;
-    std::cerr << thread_id << "items: " << items << std::endl;
+    logger_debug("****** ip cache table ******");
+    logger_debug("items: ", items);
     int d;
     for (d = 0; d < items; d++) {
-        std::cerr << thread_id << data[d] << std::endl;
+        logger_debug(data[d]);
     }
-    std::cerr << thread_id << "****** ip cache table ******" << std::endl;
+    logger_debug("****** ip cache table ******");
 #endif
     if (items == 0) {
         return -1;
