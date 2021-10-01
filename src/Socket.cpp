@@ -72,7 +72,7 @@ Socket::Socket() {
 }
 
 // create socket from pre-existing FD (address structs will be invalid!)
-Socket::Socket(int fd)    //not used!!!!
+Socket::Socket(int fd)
         : BaseSocket(fd) {
     memset(&my_adr, 0, sizeof my_adr);
     memset(&peer_adr, 0, sizeof peer_adr);
