@@ -12,6 +12,7 @@
 // INCLUDES
 
 #include "Socket.hpp"
+#include <fcntl.h>
 
 // DECLARATIONS
 
