@@ -47,7 +47,6 @@ extern bool reloadconfig;
 
 // constructor - override this if desired to create an actual socket at startup
 BaseSocket::BaseSocket()
-    : timeout(5000), sck(-1), buffstart(0), bufflen(0)
 {
     infds[0].fd = -1;
     outfds[0].fd = -1;
@@ -62,7 +61,6 @@ BaseSocket::BaseSocket()
 
 // create socket from FD - must be overridden to clear the relevant address structs
 BaseSocket::BaseSocket(int fd)
-    : timeout(5000), buffstart(0), bufflen(0)
 {
     sck = fd;
     infds[0].fd = fd;
@@ -212,9 +210,9 @@ bool BaseSocket::isNoWrite()
 // blocking check to see if there is data waiting on socket
 bool BaseSocket::checkForInput(int timeout)
 {
-    if(timeout == 0) {
-        return false;
-    }
+   // if(timeout == 0) {
+   //     return false;
+   // }
     if ((bufflen - buffstart) > 0)
         return true; // is data left in buffer
 
@@ -313,11 +311,17 @@ int BaseSocket::getLine(char *buff, int size, int timeout, bool *chopped, bool *
             bufflen = 0;
             s_errno = 0;
             errno = 0;
+            if (!isNoBlock) {
+                if(!checkForInput(timeout))
+                    return -1;
+            }
             bufflen = recv(sck, buffer, SCK_READ_BUFF_SIZE, 0);
             if (bufflen < 0) {
                 if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                    if (checkForInput(timeout)) continue;// now got some input
-                    else  return -1;// timed out
+                    if(isNoBlock) {
+                        if (checkForInput(timeout)) continue;// now got some input
+                        else  return -1;// timed out
+                    }
                 }
                 s_errno = errno;
                 return -1;
@@ -375,11 +379,18 @@ bool BaseSocket::writeToSocket(const char *buff, int len, unsigned int flags, in
         s_errno = 0;
         errno = 0;
         if(isNoWrite()) return false;
+        if((!isNoBlock) && doCheck) {
+            if( !readyForOutput(timeout)) {
+                s_errno = errno;
+                return false;
+            }
+        }
         sent = send(sck, buff + actuallysent, len - actuallysent, 0);
 
         if (sent  < 1) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                if (readyForOutput(timeout)) continue; // now able to send
+                if(isNoBlock)
+                    if (readyForOutput(timeout)) continue; // now able to send
             }
             s_errno = errno;
             return false; // other end is closed
@@ -400,6 +411,10 @@ int BaseSocket::writeToSocketNB(const char *buff, int len, unsigned int flags)
         s_errno = 0;
         errno = 0;
         if(isNoWrite()) return -1;
+        if((!isNoBlock) && doCheck) {
+            if (!readyForOutput(0))
+                return 0;
+        }
         sent = send(sck, buff + actuallysent, len - actuallysent, 0);
 
             if (sent  < 1) {
@@ -441,6 +456,10 @@ int BaseSocket::readFromSocket(char *buff, int len, unsigned int flags, int time
     while (cnt > 0) {
         s_errno = 0;
         errno = 0;
+        if((!isNoBlock) && doCheck) {
+            if(!checkForInput(timeout))
+                return -1;
+        }
         rc = recv(sck, buff, cnt, flags);
         if (rc < 0) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
