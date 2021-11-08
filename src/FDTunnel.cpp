@@ -404,14 +404,14 @@ bool FDTunnel::nots2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int
     if(twoway)
             twayfds[1].events = POLLIN;
     DEBUG_network("O_NONBLOCK IS:", O_NONBLOCK);
-    int fflags = fcntl(fdto, F_GETFL);
-    DEBUG_network("to flags:", fflags);
+    //int fflags = fcntl(fdto, F_GETFL);
+    //DEBUG_network("to flags:", fflags);
 //        fflags = fflags & (~O_NONBLOCK );
 //       DEBUG_network("setting to flags:", fflags);
 //      fflags = fcntl(fdto,F_SETFL,fflags);
 //     DEBUG_network("to fcntl returns:", fflags);
-    fflags = fcntl(fdfrom, F_GETFL);
-    DEBUG_network("from flags:", fflags);
+    //fflags = fcntl(fdfrom, F_GETFL);
+    //DEBUG_network("from flags:", fflags);
 //    fflags = fflags & (~O_NONBLOCK );
 //   DEBUG_network("setting from flags:", fflags);
 //  fflags = fcntl(fdfrom,F_SETFL,fflags);
