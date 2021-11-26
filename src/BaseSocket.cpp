@@ -210,14 +210,15 @@ bool BaseSocket::isNoWrite()
 // blocking check to see if there is data waiting on socket
 bool BaseSocket::checkForInput(int timeout)
 {
-   // if(timeout == 0) {
-   //     return false;
-   // }
     if ((bufflen - buffstart) > 0)
         return true; // is data left in buffer
 
     if (isNoRead())
         return false;
+
+    if(timeout == 0) { // no poll wanted as done by calling function
+         return false;
+    }
 
     int rc;
     s_errno = 0;

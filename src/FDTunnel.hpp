@@ -41,6 +41,10 @@ private:
 
     bool nots2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &fdfrom, bool twoway, off_t targetthroughput,
                               bool ignore);
+    bool iss2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &fdfrom, bool twoway, off_t targetthroughput,
+                          bool ignore);
+    bool iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &fdfrom, bool twoway, off_t targetthroughput,
+                         bool ignore);
 };
 
 #endif

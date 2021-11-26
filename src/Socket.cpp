@@ -347,6 +347,7 @@ int Socket::startSslClient(const std::string &certificate_path, String hostname)
 
     SSL_set_fd(ssl, this->getFD());
     SSL_set_tlsext_host_name(ssl, hostname.c_str());
+    X509_VERIFY_PARAM_set1_host(SSL_get0_param(ssl), hostname.c_str(),0);
 
     int rc = 0;
     while (rc != 1) {
@@ -626,21 +627,34 @@ bool Socket::checkForInput(int timeout)
         return BaseSocket::checkForInput(timeout);
     }
 
-    if(timeout == 0)
-        return false;
+    //if(timeout == 0)
+    //    return false;
 
-    DEBUG_network("checking for input on ssl connection (non blocking)");
+    DEBUG_network("checking for input on ssl connection");
     if ((bufflen - buffstart) > 0) {
-        DEBUG_network("found input on ssl connection");
+        DEBUG_network("found buffered input on ssl connection");
         return true;
     }
 
-    int rc = SSL_pending(ssl);
+    int rc = 0;
+    int rc2 = 0;
 
-    if (rc < 1) {
-        DEBUG_network("no pending data on ssl connection SSL_pending ", rc );
-        return false;
-    }
+        rc = SSL_has_pending(ssl);
+
+        if (rc < 1 ) {
+            if (timeout == 0) {  // poll ios handled by calling function
+                DEBUG_network("no pending data on ssl connection SSL_has_pending ", rc);
+                timedout = true;
+                return false;
+            } else {
+                if ((rc2 = poll(infds, 1, timeout)) == 0) {
+                    DEBUG_network("timed out on pending data on ssl connection SSL_pending ", rc);
+                    timedout = true;
+                    return false;
+                }
+                if (infds[0].revents & POLLIN) return true;
+            }
+        }
 
     DEBUG_network("found data on ssl connection");
 
@@ -678,6 +692,13 @@ try {
     while (i < (size - 1)) {
         buffstart = 0;
         bufflen = 0;
+        //int pend_ret = SSL_has_pending(ssl);
+        //DEBUG_network("pending ret ", pend_ret);
+        // may need checkForInput here !!
+        if (!checkForInput(timeout)) {
+            timedout = true;
+            return -1;
+        }
         bufflen = SSL_read(ssl, buffer, SCK_READ_BUFF_SIZE);
 
         DEBUG_network("read into buffer; bufflen: ", bufflen);
@@ -697,6 +718,9 @@ try {
                     if (truncated)
                         *truncated = true;
                     return i;
+                case SSL_ERROR_SYSCALL:  // happens if other end stops ssl - line may or may not be HUPed
+                    ishup = true;
+                    return -1;
                 default:
                     log_ssl_errors("ssl_read failed %s", "");
                     DEBUG_network("SSL_read failed with error ", SSL_get_error(ssl, bufflen));
@@ -808,16 +832,35 @@ int Socket::readFromSocket(char *buff, int len, unsigned int flags, int timeout,
             return len;
     }
 
+    int pend_stat = SSL_has_pending(ssl);
+    DEBUG_network("has_pending returns ", pend_stat);
+    bool has_buffer = checkForInput(timeout);
+
     int rc;
     while (cnt > 0) {
-        bool inbuffer;
         ERR_clear_error();
 
-        inbuffer = false;
+        if(!has_buffer) {
+            if (timeout > 0) {
+                if (!checkForInput(timeout)) {
+                    timedout = true;
+                    if (len - cnt > 0) {
+                        return len - cnt;
+                    } else {
+                        return -1;
+                    }
+                }
+            }
+        } else {
+            has_buffer = false;
+        }
+
+        ERR_clear_error();
         rc = SSL_read(ssl, buff, cnt);
 
         if (rc < 1) {
             s_errno = SSL_get_error(ssl,rc);
+            DEBUG_network("Error SSL_read ", s_errno);
             switch (s_errno) {
                 case SSL_ERROR_WANT_READ:
                    case SSL_ERROR_WANT_WRITE:
@@ -825,6 +868,9 @@ int Socket::readFromSocket(char *buff, int len, unsigned int flags, int timeout,
                     timedout = true;
                     return -1;
                 case SSL_ERROR_ZERO_RETURN:  // eof
+                    ishup = true;
+                    return len - cnt;
+                case SSL_ERROR_SYSCALL:  // ssl stopped at remote end
                     ishup = true;
                     return len - cnt;
                 default:
@@ -835,27 +881,11 @@ int Socket::readFromSocket(char *buff, int len, unsigned int flags, int timeout,
             }
 
         }
+        DEBUG_network("SSL read returned ", rc);
 
-        if (inbuffer) {
-            DEBUG_network("Inbuffer SSL read to return ", cnt, " bytes" );
-
-            buffstart = 0;
-            bufflen = rc;
-            if ((bufflen - buffstart) > 0) {
-                tocopy = cnt;
-                if ((bufflen - buffstart) < cnt)
-                tocopy = bufflen - buffstart;
-                memcpy(buff, buffer + buffstart, tocopy);
-                cnt -= tocopy;
-                buffstart += tocopy;
-                buff += tocopy;
-                DEBUG_network("Inbuffer SSL read to returned ", tocopy, " bytes");
-           }
-         } else {
         buff += rc;
         cnt -= rc;
         if(ret_part) return len - cnt;
-         }
     }
 
       return len;

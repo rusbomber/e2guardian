@@ -3040,10 +3040,11 @@ int ConnectionHandler::handleProxyTLSConnection(Socket &peerconn, String &ip, So
 
         // Now create a pipe - push one end onto normal proxy queue and then tunnel between other end and the ssled peerconn
         int socks[2];
-        if (socketpair(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK, 0, socks) != 0) {
-            E2LOGGER_error("Unable to create socket pair");
-            return 1;
-        }
+    //if (socketpair(AF_UNIX,SOCK_STREAM|SOCK_NONBLOCK, 0, socks) != 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, socks) != 0) {
+        E2LOGGER_error("Unable to create socket pair");
+        return 1;
+    }
     Socket *s_inside = new Socket(socks[0]);
         Socket s_outside(socks[1]);
         s_inside->setClientAddr(peerconn.getPeerIP(),peerconn.getPeerSourcePort());
