@@ -189,7 +189,8 @@ int Socket::connect(const std::string &ip, int port) {
     peer_adr.sin_port = htons(port);
     inet_aton(ip.c_str(), &peer_adr.sin_addr);
     my_port = port;
-    //fcntl(sck, F_SETFL, O_NONBLOCK);
+    int save_flags = fcntl(sck,F_GETFL);
+    fcntl(sck, F_SETFL, save_flags | O_NONBLOCK);
     s_errno = 0;
     errno = 0;
     int ret = ::connect(sck, (struct sockaddr *) &peer_adr, len);
@@ -216,7 +217,12 @@ int Socket::connect(const std::string &ip, int port) {
             }
         }
     }
-    if (ret < 0) close();
+    if (ret < 0) {
+        close();
+    } else {
+        save_flags = fcntl(sck,F_GETFL);
+        fcntl(sck, F_SETFL, save_flags & ~O_NONBLOCK);
+    }
     return ret;
 }
 
@@ -639,11 +645,11 @@ bool Socket::checkForInput(int timeout)
     int rc = 0;
     int rc2 = 0;
 
-        rc = SSL_has_pending(ssl);
+        rc = s_checkPending();
 
         if (rc < 1 ) {
             if (timeout == 0) {  // poll ios handled by calling function
-                DEBUG_network("no pending data on ssl connection SSL_has_pending ", rc);
+                DEBUG_network("no pending data on ssl connection pending ", rc);
                 timedout = true;
                 return false;
             } else {
@@ -832,8 +838,10 @@ int Socket::readFromSocket(char *buff, int len, unsigned int flags, int timeout,
             return len;
     }
 
+#ifdef DEBUG_LOW
     int pend_stat = SSL_has_pending(ssl);
     DEBUG_network("has_pending returns ", pend_stat);
+#endif
     bool has_buffer = checkForInput(timeout);
 
     int rc;
@@ -1143,4 +1151,23 @@ short int Socket::get_wait_flag(bool write_flag) {
 void Socket::setClientAddr(std::string ip, int port) {
     client_addr = ip;
     client_port = port;
+}
+
+bool Socket::s_checkPending() {
+    if(s_checkShutdown()&SSL_RECEIVED_SHUTDOWN) {
+        DEBUG_network("SSL shudown in progress - returning false");
+        return (s_pending = false);
+    }
+    s_pending = SSL_pending(ssl);
+    DEBUG_network("SSL_pending gives ", s_pending);
+    s_prev_has_pending = s_has_pending;
+    s_has_pending = SSL_has_pending(ssl);
+    DEBUG_network("SSL_has_pending gives ", s_has_pending);
+    s_pending = s_pending || (s_has_pending && !s_prev_has_pending);
+    DEBUG_network("Returning ", s_pending);
+    return s_pending;
+}
+
+int Socket::s_checkShutdown() {
+    return SSL_get_shutdown(ssl);
 }

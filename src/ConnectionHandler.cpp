@@ -411,6 +411,8 @@ ConnectionHandler::connectUpstream(Socket &sock, NaughtyFilter &cm, int port = 0
     }
     DEBUG_debug("May_be_loop = ", may_be_loop, " ", " port ", port);
 
+    sock.setTimeout(o.net.connect_timeout);
+
     while (++retry < o.net.connect_retries) {
         lerr_mess = 0;
         if (retry > 0) {
@@ -443,7 +445,6 @@ ConnectionHandler::connectUpstream(Socket &sock, NaughtyFilter &cm, int port = 0
                     may_be_loop = false;
                 }
 
-                sock.setTimeout(o.net.connect_timeout);
 
                 DEBUG_debug("Connecting to IP ", des_ip, " port ", String(port));
 
@@ -544,8 +545,10 @@ ConnectionHandler::connectUpstream(Socket &sock, NaughtyFilter &cm, int port = 0
     // only get here if failed
     cm.upfailure = true;
     cm.message_no = lerr_mess;
-    cm.whatIsNaughty = "";
-    cm.whatIsNaughtyLog = "";
+    cm.whatIsNaughty = o.language_list.getTranslation(lerr_mess);
+    cm.whatIsNaughtyLog = cm.whatIsNaughty;
+    cm.whatIsNaughtyCategories = "";
+    cm.whatIsNaughtyDisplayCategories = "";
     cm.isItNaughty = true;
     cm.blocktype = 3;
     cm.isexception = false;
