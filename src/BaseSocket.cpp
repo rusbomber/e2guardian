@@ -27,19 +27,6 @@ extern bool reloadconfig;
 
 // DEFINITIONS
 
-#ifdef NOTDEF
-#define dgtimercmp(a, b, cmp) \
-    (((a)->tv_sec == (b)->tv_sec) ? ((a)->tv_usec cmp(b)->tv_usec) : ((a)->tv_sec cmp(b)->tv_sec))
-
-#define dgtimersub(a, b, result)                     \
-    (result)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
-    (result)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
-    if ((result)->tv_usec < 0) {                     \
-        (result)->tv_sec--;                          \
-        (result)->tv_usec += 1000000;                \
-    }
-#endif
-
 // IMPLEMENTATION
 
 // This class contains client and server socket init and handling
@@ -93,7 +80,7 @@ void BaseSocket::baseReset()
         infds[0].fd = -1;
         outfds[0].fd = -1;
     }
-   // timeout = 5000;
+   // timeout = 5000;   // commented out so that timeout can be set before a connect call
     buffstart = 0;
     bufflen = 0;
     isclosing = false;

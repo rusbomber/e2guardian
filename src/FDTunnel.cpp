@@ -97,14 +97,16 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
     int sfbuff_cnt = 0;
     int stbuff_cnt = 0;
 
-
+// Functionb now split into different functions for different cases as ssl sockets need treating differently to
+    // normal sockets with different order of operations for each case
+    // Yes, it is untidy, but makes bug-fixing much easier.  PP.
     if (!st_isSsl && !sf_isSsl) {   //  both sockets not ssl
         return nots2nots_tunnel(sockfrom, sockto, fdto, fdfrom, twoway, targetthroughput, ignore);
     }
-   if (sf_isSsl && !st_isSsl ) {   //  from socket is ssl - to is not ssl
-      return iss2nots_tunnel(sockfrom, sockto, fdto, fdfrom, twoway, targetthroughput, ignore);
-   }
-    if (sf_isSsl && st_isSsl ) {   //  from socket is ssl - to is ssl
+    if (sf_isSsl && !st_isSsl) {   //  from socket is ssl - to is not ssl
+        return iss2nots_tunnel(sockfrom, sockto, fdto, fdfrom, twoway, targetthroughput, ignore);
+    }
+    if (sf_isSsl && st_isSsl) {   //  from socket is ssl - to is ssl
         return iss2iss_tunnel(sockfrom, sockto, fdto, fdfrom, twoway, targetthroughput, ignore);
     }
 
@@ -123,9 +125,9 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
     // Note: poll has to be after read (or write) for ssl sockets, but before read (or write) for non-ssl!
 
     //if (!sf_isSsl) {
-        sf_read_wait = true;    // wait for poll before reading
-        sf_read_wait_flags = POLLIN;
-        sf_write_wait_flags = POLLOUT;
+    sf_read_wait = true;    // wait for poll before reading
+    sf_read_wait_flags = POLLIN;
+    sf_write_wait_flags = POLLOUT;
     //}
     if (twoway) {
         st_read_wait = true;    // wait for poll before reading
@@ -145,7 +147,7 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
         int to_write = (sockfrom.bufflen - sockfrom.buffstart);
         if ((targetthroughput > 0) && (targetthroughput < to_write))
             to_write = targetthroughput;
-        sfbuff_cnt = sockfrom.readFromSocket(sfbuff, to_write,0,0);
+        sfbuff_cnt = sockfrom.readFromSocket(sfbuff, to_write, 0, 0);
         if (sfbuff_cnt < 1) {  //should never happen!
             return true;
         }
@@ -155,7 +157,6 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
         st_write_wait = true;
         st_write_wait_flags = POLLOUT;
     }
-
 
 
     while (!done && (targetthroughput > -1 ? throughput < targetthroughput : true)) {
@@ -172,9 +173,8 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
                 sf_read_wait = false;
             if ((!sf_read_wait)
                 || ((twayfds[0].revents & sf_read_wait_flags) == sf_read_wait_flags)
-               // || (sf_isSsl && sockfrom.checkForInput(0))
-                    )
-            {
+                // || (sf_isSsl && sockfrom.checkForInput(0))
+                    ) {
                 if (targetthroughput > -1)
                     // we have a target throughput - only read in the exact amount of data we've been told to
                     sfbuff_cnt = sockfrom.readFromSocket(sfbuff,
@@ -201,16 +201,16 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
                     break;
                 } else { // some data read
                     DEBUG_network("tunnel got data from sockfrom: ", sfbuff_cnt, " bytes");
-                   // throughput += sfbuff_cnt; // increment our counter used to log
+                    // throughput += sfbuff_cnt; // increment our counter used to log
                     DEBUG_network("throughput is ", throughput, " of ", targetthroughput);
-    //                if(sf_isSsl) {
-                        sf_read_wait = true;
-    //                } else {
-   //                     if(!st_isSsl) {
-                            st_write_wait_flags = POLLOUT;
-                            st_write_wait = true;
-     //                   }
-     //               }
+                    //                if(sf_isSsl) {
+                    sf_read_wait = true;
+                    //                } else {
+                    //                     if(!st_isSsl) {
+                    st_write_wait_flags = POLLOUT;
+                    st_write_wait = true;
+                    //                   }
+                    //               }
                     done = false;
                 }
             }
@@ -226,7 +226,7 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
                 if (st_isSsl && sockto.checkForInput(0))
                     st_read_wait = false;
                 if ((!st_read_wait) || ((twayfds[1].revents & st_read_wait_flags) == st_read_wait_flags)
-                        //|| (st_isSsl && sockto.checkForInput(0))
+                    //|| (st_isSsl && sockto.checkForInput(0))
                         ) {
 
                     DEBUG_network("stage 2 about to read");
@@ -251,14 +251,14 @@ FDTunnel::tunnel(Socket &sockfrom, Socket &sockto, bool twoway, off_t targetthro
 
                         DEBUG_network("tunnel got data from sockto: ", stbuff_cnt, " bytes");
                         throughput += stbuff_cnt;
-        //                if(st_isSsl) {
-                            st_read_wait = false;
-          //              } else {
-          //                  if(!sf_isSsl) {
-                                sf_write_wait = true;
-                                sf_write_wait_flags = POLLOUT;
-          //                  }
-          //              }
+                        //                if(st_isSsl) {
+                        st_read_wait = false;
+                        //              } else {
+                        //                  if(!sf_isSsl) {
+                        sf_write_wait = true;
+                        sf_write_wait_flags = POLLOUT;
+                        //                  }
+                        //              }
                         done = false;
                     }
                 }
@@ -424,21 +424,8 @@ bool FDTunnel::nots2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int
     twayfds[0].events = POLLIN;
     twayfds[0].revents = 0;
     twayfds[1].revents = 0;
-    if(twoway)
-            twayfds[1].events = POLLIN;
-    DEBUG_network("O_NONBLOCK IS:", O_NONBLOCK);
-    //int fflags = fcntl(fdto, F_GETFL);
-    //DEBUG_network("to flags:", fflags);
-//        fflags = fflags & (~O_NONBLOCK );
-//       DEBUG_network("setting to flags:", fflags);
-//      fflags = fcntl(fdto,F_SETFL,fflags);
-//     DEBUG_network("to fcntl returns:", fflags);
-    //fflags = fcntl(fdfrom, F_GETFL);
-    //DEBUG_network("from flags:", fflags);
-//    fflags = fflags & (~O_NONBLOCK );
-//   DEBUG_network("setting from flags:", fflags);
-//  fflags = fcntl(fdfrom,F_SETFL,fflags);
-// DEBUG_network("to fcntl returns:", fflags);
+    if (twoway)
+        twayfds[1].events = POLLIN;
 
     if ((sockfrom.bufflen - sockfrom.buffstart) > 0) {
         int to_write = (sockfrom.bufflen - sockfrom.buffstart);
@@ -466,7 +453,6 @@ bool FDTunnel::nots2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int
 
         {
             int rc = poll(twayfds, 2, timeout);
-//int rc = poll(twayfds, 2, 10000);  // reduced timeout for testing
             if (rc < 1) {
                 DEBUG_network("tunnel tw poll returned error or timeout::", rc);
                 break; // an error occurred or it timed out so end while()
@@ -549,10 +535,6 @@ bool FDTunnel::nots2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int
             }
         }
     }
-//fflags = fcntl(fdto,F_GETFL);
-//fcntl(fdto,F_SETFL,(fflags | O_NONBLOCK ));
-//fflags = fcntl(fdfrom,F_GETFL);
-//fcntl(fdfrom,F_SETFL,(fflags | O_NONBLOCK ));
     if ((throughput >= targetthroughput) && (targetthroughput > -1)) {
         DEBUG_network("All expected data tunnelled. (expected ", targetthroughput, "; tunnelled ", throughput, ")");
     } else {
@@ -563,7 +545,7 @@ bool FDTunnel::nots2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int
 
 
 bool FDTunnel::iss2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &fdfrom, bool twoway,
-                                off_t targetthroughput, bool ignore) {
+                               off_t targetthroughput, bool ignore) {
     // it is a twoway with from socket ssl and to socket not ssl
 
     bool done = false; // so we get past the first while
@@ -581,20 +563,8 @@ bool FDTunnel::iss2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int 
     twayfds[0].events = POLLIN;
     twayfds[0].revents = 0;
     twayfds[1].revents = 0;
-    if(twoway)
+    if (twoway)
         twayfds[1].events = POLLIN;
-    //int fflags = fcntl(fdto, F_GETFL);
-    //DEBUG_network("to flags:", fflags);
-//        fflags = fflags & (~O_NONBLOCK );
-//       DEBUG_network("setting to flags:", fflags);
-//      fflags = fcntl(fdto,F_SETFL,fflags);
-//     DEBUG_network("to fcntl returns:", fflags);
-    //fflags = fcntl(fdfrom, F_GETFL);
-    //DEBUG_network("from flags:", fflags);
-//    fflags = fflags & (~O_NONBLOCK );
-//   DEBUG_network("setting from flags:", fflags);
-//  fflags = fcntl(fdfrom,F_SETFL,fflags);
-// DEBUG_network("to fcntl returns:", fflags);
 
     if ((sockfrom.bufflen - sockfrom.buffstart) > 0) {
         int to_write = (sockfrom.bufflen - sockfrom.buffstart);
@@ -635,8 +605,6 @@ bool FDTunnel::iss2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int 
                                                                                                      : (
                                            targetthroughput - throughput)));
                 } else {
-                    //rc = sockfrom.readFromSocket(sfbuff, 4096, 0, 0, true);
-                    //rc = sockfrom.readFromSocket(sfbuff, sizeof(sfbuff),0,0,true);
                     rc = SSL_read(sockfrom.ssl, sfbuff, sizeof(sfbuff));
                 }
                 if (rc < 0) {
@@ -653,15 +621,16 @@ bool FDTunnel::iss2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int 
 
                     if (tooutfds[0].revents & POLLOUT) {
 
-                        rc = send(fdto, sfbuff, rc, 0);
+                        //       rc = send(fdto, sfbuff, rc, 0);
+                        rc = sockto.writeToSocket(sfbuff, rc, 0, 0);
                         if (rc < 1) { // write data
                             break; // was an error writing
                         }
                         DEBUG_network("tunnel wrote data out: ", rc, " bytes");
-                        if (SSL_has_pending(sockfrom.ssl))
-                            do_poll = false;
-                        else
-                            do_poll = true;
+                        //    if (sockfrom.s_checkPending()))
+                        //do_poll = false;
+                        //else
+                        //do_poll = true;
                         done = false; // flag to say data still to be handled
                     } else {
                         break; // should never get here
@@ -670,7 +639,9 @@ bool FDTunnel::iss2nots_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int 
             }
         }
         bool pending = sockfrom.s_checkPending();
-DEBUG_network("has_pending is ",pending, " do_poll is ", do_poll);
+        if (pending)
+            do_poll = false;
+        DEBUG_network("has_pending is ", pending, " do_poll is ", do_poll);
         if (do_poll) {
             rc = poll(twayfds, 2, l_timeout);
 //int rc = poll(twayfds, 2, 10000);  // reduced timeout for testing
@@ -706,13 +677,13 @@ DEBUG_network("has_pending is ",pending, " do_poll is ", do_poll);
                 }
 
                 if ((fromoutfds[0].revents & POLLOUT) && sockfrom.s_checkShutdown() == 0) {
-                    rc = sockfrom.writeToSocket(sfbuff,rc,0,timeout);
+                    rc = sockfrom.writeToSocket(sfbuff, rc, 0, timeout);
 
                     if (rc < 1) { // write data
                         break; // was an error writing
                     }
-                    if(sockfrom.s_checkPending())
-                        do_poll = false;
+                    //if (sockfrom.s_checkPending())
+                        //do_poll = false;
                     done = false; // flag to say data still to be handled
                 } else {
                     break; // should never get here
@@ -720,10 +691,6 @@ DEBUG_network("has_pending is ",pending, " do_poll is ", do_poll);
             }
         }
     }
-//fflags = fcntl(fdto,F_GETFL);
-//fcntl(fdto,F_SETFL,(fflags | O_NONBLOCK ));
-//fflags = fcntl(fdfrom,F_GETFL);
-//fcntl(fdfrom,F_SETFL,(fflags | O_NONBLOCK ));
     if ((throughput >= targetthroughput) && (targetthroughput > -1)) {
         DEBUG_network("All expected data tunnelled. (expected ", targetthroughput, "; tunnelled ", throughput, ")");
     } else {
@@ -734,7 +701,7 @@ DEBUG_network("has_pending is ",pending, " do_poll is ", do_poll);
 
 
 bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &fdfrom, bool twoway,
-                               off_t targetthroughput, bool ignore) {
+                              off_t targetthroughput, bool ignore) {
     // it is a tunnel with from socket ssl and to socket ssl
 
     bool done = false; // so we get past the first while
@@ -750,20 +717,8 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
     twayfds[0].events = POLLIN;
     twayfds[0].revents = 0;
     twayfds[1].revents = 0;
-    if(twoway)
+    if (twoway)
         twayfds[1].events = POLLIN;
-    //int fflags = fcntl(fdto, F_GETFL);
-    //DEBUG_network("to flags:", fflags);
-//        fflags = fflags & (~O_NONBLOCK );
-//       DEBUG_network("setting to flags:", fflags);
-//      fflags = fcntl(fdto,F_SETFL,fflags);
-//     DEBUG_network("to fcntl returns:", fflags);
-    //fflags = fcntl(fdfrom, F_GETFL);
-    //DEBUG_network("from flags:", fflags);
-//    fflags = fflags & (~O_NONBLOCK );
-//   DEBUG_network("setting from flags:", fflags);
-//  fflags = fcntl(fdfrom,F_SETFL,fflags);
-// DEBUG_network("to fcntl returns:", fflags);
 
     if ((sockfrom.bufflen - sockfrom.buffstart) > 0) {
         int to_write = (sockfrom.bufflen - sockfrom.buffstart);
@@ -794,17 +749,18 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
 
         {
             // 1st check pending before doing poll
-            if ((sockfrom.s_checkPending())||twayfds[0].revents & POLLIN) {
+            if ((sockfrom.s_checkPending()) || twayfds[0].revents & POLLIN) {
                 DEBUG_network("Reading from");
                 if (targetthroughput > -1) {
 // we have a target throughput - only read in the exact amount of data we've been told to
                     //rc = SSL_read(sockfrom.ssl, sfbuff,
                     rc = sockfrom.readFromSocket(sfbuff,
-                                  (((int) sizeof(sfbuff) < ((targetthroughput - throughput) /*+2*/)) ? sizeof(sfbuff)
-                                                                                                     : (
-                                           targetthroughput - throughput)),0,0, true);
+                                                 (((int) sizeof(sfbuff) < ((targetthroughput - throughput) /*+2*/))
+                                                  ? sizeof(sfbuff)
+                                                  : (
+                                                          targetthroughput - throughput)), 0, 0, true);
                 } else {
-                    rc = sockfrom.readFromSocket(sfbuff, 4096,0,0,true);
+                    rc = sockfrom.readFromSocket(sfbuff, 4096, 0, 0, true);
                     //rc = sockfrom.readFromSocket(sfbuff, sizeof(sfbuff),0,0,true);
                     //rc = SSL_read(sockfrom.ssl, sfbuff, sizeof(sfbuff));
                 }
@@ -814,7 +770,7 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
                     done = true; // none received so pipe is closed so flag it
                     break;
                 } else { // some data read
-                    if(sockfrom.s_checkPending())
+                    if (sockfrom.s_checkPending())
                         do_poll = false;
                     DEBUG_network("tunnel got data from sockfrom: ", rc, " bytes");
                     throughput += rc; // increment our counter used to log
@@ -824,14 +780,14 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
 
                     if (tooutfds[0].revents & POLLOUT) {
 
-                        rc = sockto.writeToSocket( sfbuff, rc, 0, 0);
+                        rc = sockto.writeToSocket(sfbuff, rc, 0, timeout);
                         if (rc < 1) { // write data
                             break; // was an error writing
                         }
                         DEBUG_network("tunnel wrote data out: ", rc, " bytes");
                         done = false; // flag to say data still to be handled
-                                if(twoway && (sockto.s_checkPending()))
-                                    do_poll = false;
+                        if (twoway && (sockto.s_checkPending()))
+                            do_poll = false;
                     } else {
                         break; // should never get here
                     }
@@ -844,7 +800,7 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
 
 // read as much as is available
 
-            rc = sockto.readFromSocket(sfbuff, sizeof(sfbuff), 0,0, true);
+            rc = sockto.readFromSocket(sfbuff, sizeof(sfbuff), 0, 0, true);
             DEBUG_network("read to returned", rc);
 
             if (rc < 0) {
@@ -857,17 +813,17 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
                 if (poll(fromoutfds, 1, timeout) < 1) {
                     break; // an error occurred or timed out so end while()
                 }
-                if(sockto.s_checkPending())
+                if (sockto.s_checkPending())
                     do_poll = false;
 
                 if (fromoutfds[0].revents & POLLOUT) {
-                    rc = sockfrom.writeToSocket(sfbuff,rc,0,timeout);
+                    rc = sockfrom.writeToSocket(sfbuff, rc, 0, timeout);
 
                     if (rc < 1) { // write data
                         break; // was an error writing
                     }
                     done = false; // flag to say data still to be handled
-                    if(sockfrom.s_checkPending())
+                    if (sockfrom.s_checkPending())
                         do_poll = false;
                 } else {
                     break; // should never get here
@@ -878,27 +834,22 @@ bool FDTunnel::iss2iss_tunnel(Socket &sockfrom, Socket &sockto, int &fdto, int &
             do_poll = false;
         }
 
-        if(do_poll) {
+        if (do_poll) {
 
-        rc = poll(twayfds, 2, timeout);
-//int rc = poll(twayfds, 2, 10000);  // reduced timeout for testing
-        if (rc < 1) {
-            DEBUG_network("tunnel tw poll returned error or timeout::", rc);
-            break; // an error occurred or it timed out so end while()
-        }
-        done = false;
-        DEBUG_network("tunnel tw poll returned ok:", rc, " twayfds.revents:", twayfds[0].revents, " ",
-                      twayfds[1].revents);
-        DEBUG_network("POLLIN is ", POLLIN);
+            rc = poll(twayfds, 2, timeout);
+            if (rc < 1) {
+                DEBUG_network("tunnel tw poll returned error or timeout::", rc);
+                break; // an error occurred or it timed out so end while()
+            }
+            done = false;
+            DEBUG_network("tunnel tw poll returned ok:", rc, " twayfds.revents:", twayfds[0].revents, " ",
+                          twayfds[1].revents);
+            DEBUG_network("POLLIN is ", POLLIN);
 
         } else {
             do_poll = true;
         }
     }
-//fflags = fcntl(fdto,F_GETFL);
-//fcntl(fdto,F_SETFL,(fflags | O_NONBLOCK ));
-//fflags = fcntl(fdfrom,F_GETFL);
-//fcntl(fdfrom,F_SETFL,(fflags | O_NONBLOCK ));
     if ((throughput >= targetthroughput) && (targetthroughput > -1)) {
         DEBUG_network("All expected data tunnelled. (expected ", targetthroughput, "; tunnelled ", throughput, ")");
     } else {
