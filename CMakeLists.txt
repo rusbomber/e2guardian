@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(v5_6)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS -DHAVE_CONFIG_H)
 
 include_directories(.)
 include_directories(src)
