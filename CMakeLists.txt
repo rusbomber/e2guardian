@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
-project(v5_0)
+project(v5_5)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS -DHAVE_CONFIG_H)
 
 include_directories(.)
 include_directories(src)
 
-add_executable(v5_0
+add_executable(v5_5
         src/authplugins/dnsauth.cpp
         src/authplugins/header.cpp
         src/authplugins/ident.cpp
@@ -102,4 +103,4 @@ add_executable(v5_0
         src/UDSocket.cpp
         src/UDSocket.hpp
         src/UrlRec.hpp
-        dgconfig.h)
+        e2config.h)
