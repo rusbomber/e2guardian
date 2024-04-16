@@ -33,8 +33,7 @@ COMMANDLINE_SOURCE =
 endif
 
 DEFAULTDM_SOURCE = downloadmanagers/default.cpp
-#FANCYDM_SOURCE = d$downloadmanagers/fancy.cpp
-FANCYDM_SOURCE = 
+FANCYDM_SOURCE =
 TRICKLEDM_SOURCE = downloadmanagers/trickle.cpp
 
 IDENTAUTH_SOURCE = authplugins/ident.cpp
@@ -57,12 +56,7 @@ sbin_PROGRAMS = e2guardian
 
 e2guardian_CXXFLAGS = $(PCRE_CFLAGS) $(AM_CXXFLAGS) -Wall
 e2guardian_LDADD = $(PCRE_LIBS) $(AM_LIBS)
-e2guardian_CPPFLAGS = -D__LOGLOCATION='"$(E2LOGLOCATION)/"' \
-			-D__PIDDIR='"$(E2PIDDIR)"' \
-			-D__PROXYUSER='"$(E2PROXYUSER)"' \
-			-D__PROXYGROUP='"$(E2PROXYGROUP)"' \
-			-D__CONFDIR='"$(E2CONFDIR)"' \
-			$(AM_CPPFLAGS)
+e2guardian_CPPFLAGS = $(AM_CPPFLAGS)
 e2guardian_SOURCES = String.cpp String.hpp \
                        FDTunnel.cpp FDTunnel.hpp \
                        ConnectionHandler.cpp ConnectionHandler.hpp \
