@@ -22,6 +22,7 @@
 #include <stdexcept>
 #include <cerrno>
 #include <unistd.h>
+#include <cstring>
 #include <netinet/tcp.h>
 #include "String.hpp"
 
@@ -41,8 +42,8 @@ UdpSocket::UdpSocket() {
     if (sck < 0) {
         s_errno = errno;
     } else {
-        memset(&my_adr, 0, sizeof my_adr);
-        memset(&peer_adr, 0, sizeof peer_adr);
+        std::memset(&my_adr, 0, sizeof my_adr);
+        std::memset(&peer_adr, 0, sizeof peer_adr);
         my_adr.sin_family = AF_INET;
         peer_adr.sin_family = AF_INET;
         peer_adr_length = sizeof(struct sockaddr_in);
@@ -58,8 +59,8 @@ UdpSocket::UdpSocket() {
 // create socket from pre-existing FD (address structs will be invalid!)
 UdpSocket::UdpSocket(int fd)
         : BaseSocket(fd) {
-    memset(&my_adr, 0, sizeof my_adr);
-    memset(&peer_adr, 0, sizeof peer_adr);
+    std::memset(&my_adr, 0, sizeof my_adr);
+    std::memset(&peer_adr, 0, sizeof peer_adr);
     my_adr.sin_family = AF_INET;
     peer_adr.sin_family = AF_INET;
     peer_adr_length = sizeof(struct sockaddr_in);
@@ -73,8 +74,8 @@ UdpSocket::UdpSocket(int fd)
 // create socket from pre-existing FD, storing local & remote IPs
 UdpSocket::UdpSocket(int newfd, struct sockaddr_in myip, struct sockaddr_in peerip)
         : BaseSocket(newfd) {
-    memset(&my_adr, 0, sizeof my_adr); // ***
-    memset(&peer_adr, 0, sizeof peer_adr); // ***
+    std::memset(&my_adr, 0, sizeof my_adr); // ***
+    std::memset(&peer_adr, 0, sizeof peer_adr); // ***
     my_adr.sin_family = AF_INET; // *** Fix suggested by
     peer_adr.sin_family = AF_INET; // *** Christopher Weimann
     my_adr = myip;
@@ -131,8 +132,8 @@ void UdpSocket::reset() {
         return;
     }
 
-    memset(&my_adr, 0, sizeof my_adr);
-    memset(&peer_adr, 0, sizeof peer_adr);
+    std::memset(&my_adr, 0, sizeof my_adr);
+    std::memset(&peer_adr, 0, sizeof peer_adr);
     my_adr.sin_family = AF_INET;
     peer_adr.sin_family = AF_INET;
     peer_adr_length = sizeof(struct sockaddr_in);

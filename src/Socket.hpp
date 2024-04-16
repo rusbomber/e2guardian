@@ -13,6 +13,7 @@
 #include "String.hpp"
 #include <sstream>
 #include <iomanip>
+#include <cstring>
 
 #include "openssl/ssl.h"
 #include "String.hpp"

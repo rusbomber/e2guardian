@@ -1155,7 +1155,7 @@ int fc_controlit()   //
     g_is_starting = false;
 
     struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
+    std::memset(&sa, 0, sizeof(sa));
 
     // Now start creating threads so main thread can just handle signals, list reloads and stats
     // This removes need for select and/or epoll greatly simplifying the code

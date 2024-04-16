@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <cstring>
 #include "Logger.hpp"
 
 extern bool is_daemonised;
@@ -619,7 +620,7 @@ UdpRec *Logger::addUdp(std::string host, int port) {
         } else { // do dns lookup
           // std::cerr << "host is NOT an ip" << std::endl;
             struct addrinfo hints, *addrs, *addr;
-            memset(&hints, 0, sizeof(addrinfo));
+            std::memset(&hints, 0, sizeof(addrinfo));
 
             hints.ai_family = AF_INET;
             hints.ai_socktype = SOCK_DGRAM;

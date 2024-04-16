@@ -1436,7 +1436,7 @@ void ListContainer::graphAdd(String s, const int inx, int item) {
                 E2LOGGER_error("Cannot reallocate memory for phrase tree: ", strerror(errno));
                 exit(1);
             }
-            memset(realgraphdata + current_graphdata_size, 0,
+            std::memset(realgraphdata + current_graphdata_size, 0,
                    sizeof(int) * (new_current_graphdata_size - current_graphdata_size));
             current_graphdata_size = new_current_graphdata_size;
             graphdata2 = realgraphdata + ROOTOFFSET;
@@ -1494,7 +1494,7 @@ void ListContainer::graphAdd(String s, const int inx, int item) {
                     E2LOGGER_error("Cannot reallocate memory for phrase tree: ", strerror(errno));
                     exit(1);
                 }
-                memset(realgraphdata + current_graphdata_size, 0,
+                std::memset(realgraphdata + current_graphdata_size, 0,
                        sizeof(int) * (new_current_graphdata_size - current_graphdata_size));
                 current_graphdata_size = new_current_graphdata_size;
                 graphdata2 = realgraphdata + ROOTOFFSET;
@@ -1922,14 +1922,14 @@ bool ListContainer::increaseMemoryBy(size_t bytes) {
         data = (char *) realloc(data, (data_memory + bytes) * sizeof(char));
         if (data == nullptr)
             return false;
-        memset(data + data_memory, 0, bytes * sizeof(char));
+        std::memset(data + data_memory, 0, bytes * sizeof(char));
         data_memory += bytes;
     } else {
         free(data);
         data = (char *) calloc(bytes, sizeof(char));
         if (data == nullptr)
             return false;
-        memset(data + data_memory, 0, bytes * sizeof(char));
+        std::memset(data + data_memory, 0, bytes * sizeof(char));
         data_memory = bytes;
     }
     return true;

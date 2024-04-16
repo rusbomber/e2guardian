@@ -116,7 +116,7 @@ int kavdinstance::scanFile(HTTPHeader *requestheader, HTTPHeader *docheader, con
         return E2CS_SCANERROR;
     }
     char *buff = new char[4096];
-    memset(buff, 0, 4096);
+    std::memset(buff, 0, 4096);
     int rc;
     try {
         // read kaspersky kavdscan (AV Enging Server) - format: 2xx greeting
