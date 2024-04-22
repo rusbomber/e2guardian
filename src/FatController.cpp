@@ -1584,7 +1584,7 @@ int fc_controlit()   //
             if (o.createLists(++reload_cnt)) {
                 E2LOGGER_info("Reconfiguring E2guardian: gentle reload completed");
             } else {
-
+                reload_cnt--;
                 E2LOGGER_info("%sReconfiguring E2guardian: gentle reload failed");
             }
 

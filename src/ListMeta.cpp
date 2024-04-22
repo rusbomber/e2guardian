@@ -161,6 +161,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
             case LIST_METHOD_IP:
                 if (readFile(fpath.toCharArray(), pwd.toCharArray(), &rec.list_ref, false, nm.toCharArray(), true)) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -169,6 +170,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
             case LIST_METHOD_IPMAP:
                 if (readFile(fpath.toCharArray(), pwd.toCharArray(), &rec.list_ref, false, nm.toCharArray(), true, false, true)) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -177,6 +179,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
             case LIST_METHOD_MAP:
                 if (readFile(fpath.toCharArray(), pwd.toCharArray(), &rec.list_ref, false, nm.toCharArray(), false, false, true)) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -185,6 +188,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
             case LIST_METHOD_TIME:
                 if (readFile(fpath.toCharArray(),  pwd.toCharArray(),&rec.list_ref, false, nm.toCharArray(), false, true)) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -193,6 +197,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
             case LIST_METHOD_READF_EWS :
                 if (readFile(fpath.toCharArray(), pwd.toCharArray(), &rec.list_ref, false, nm.toCharArray())) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -204,6 +209,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
                     //DEBUG_debug(fpath, " read ");
                     //o.lm.l[rec.list_ref]->dump_data();  // temp test only
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -213,6 +219,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
                 if (readRegExMatchFile(fpath.toCharArray(), pwd.toCharArray(), nm.toCharArray(), rec.list_ref, rec.comp, rec.source,
                                        rec.reg_list_ref)) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -222,6 +229,7 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
                 if (readRegExReplacementFile(fpath.toCharArray(),  pwd.toCharArray(),nm.toCharArray(), rec.list_ref, rec.replace,
                                              rec.comp)) {
                     list_vec.push_back(rec);
+                    if (o.lm.l[rec.list_ref]->read_errors) errors = true;
                 } else {
                     E2LOGGER_error("Unable to read ", fpath);
                     errors = true;
@@ -229,7 +237,10 @@ bool ListMeta::load_type(int type, std::deque<String> &list) {
                 break;
         }
     }
-    if (errors && o.lists.abort_on_missing_list) return false;
+    if (errors) {
+        return false;
+    }
+   // if (errors && o.lists.abort_on_missing_list) return false;
     return true;
 }
 

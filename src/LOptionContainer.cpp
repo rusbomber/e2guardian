@@ -86,22 +86,26 @@ LOptionContainer::LOptionContainer(int load_id)
     DEBUG_config("read Storyboard: ", o.story.storyboard_location);
     if (!StoryA.readFile(o.story.storyboard_location.c_str(), LMeta, true)) {
         E2LOGGER_error("Storyboard not loaded OK");
-        loaded_ok = false;
+        sb_loaded_ok = false;
+        is_fatal = true;
     }
 
-    if (loaded_ok && !StoryA.setEntry(ENT_STORYA_PRE_AUTH,"pre-authcheck")) {
+    if (sb_loaded_ok && !StoryA.setEntry(ENT_STORYA_PRE_AUTH,"pre-authcheck")) {
         E2LOGGER_error("Required storyboard entry function 'pre-authcheck' is missing");
-        loaded_ok = false;
+        sb_loaded_ok = false;
+        is_fatal = true;
     }
 
-    if (loaded_ok && (o.net.transparenthttps_port > 0) && !StoryA.setEntry(ENT_STORYA_PRE_AUTH_THTTPS,"thttps-pre-authcheck")) {
+    if (sb_loaded_ok && (o.net.transparenthttps_port > 0) && !StoryA.setEntry(ENT_STORYA_PRE_AUTH_THTTPS,"thttps-pre-authcheck")) {
         E2LOGGER_error("Required storyboard entry function 'thttps-pre-authcheck' is missing");
-        loaded_ok = false;
+        sb_loaded_ok = false;
+        is_fatal = true;
     }
 
-    if (loaded_ok && (o.net.icap_port > 0) && !StoryA.setEntry(ENT_STORYA_PRE_AUTH_ICAP,"icap-pre-authcheck")) {
+    if (sb_loaded_ok && (o.net.icap_port > 0) && !StoryA.setEntry(ENT_STORYA_PRE_AUTH_ICAP,"icap-pre-authcheck")) {
         E2LOGGER_error("Required storyboard entry function 'icap-pre-authcheck' is missing");
-        loaded_ok = false;
+        sb_loaded_ok = false;
+        is_fatal = true;
     }
 
  //   if (loaded_ok && o.use_filter_groups_list)  {
@@ -112,17 +116,18 @@ LOptionContainer::LOptionContainer(int load_id)
  //   }
 
     DEBUG_trace("");
-    if (loaded_ok && o.story.auth_entry_dq.size() > 0)  {
+    if (sb_loaded_ok && o.story.auth_entry_dq.size() > 0)  {
             for (std::deque<struct StoryBoardOptions::SB_entry_map>::const_iterator i = o.story.auth_entry_dq.begin(); i != o.story.auth_entry_dq.end(); ++i) {
                 if (!StoryA.setEntry(i->entry_id, i->entry_function)) {
                     E2LOGGER_error("Required auth storyboard entry function", i->entry_function,
                                 " is missing from pre_auth.story");
                     loaded_ok = false;
+                    is_fatal = true;
                 }
             }
     }
 
-    if(loaded_ok && (!readFilterGroupConf() || (o.lists.abort_on_missing_list && o.config_error)))  {
+    if(sb_loaded_ok && (!readFilterGroupConf() || (o.lists.abort_on_missing_list && o.config_error)))  {
         loaded_ok = false;
         E2LOGGER_error("Error in reading filter group files");
     }
@@ -619,6 +624,7 @@ bool LOptionContainer::readFilterGroupConf()
     ConfigVar groupnamesfile;
     String groupname;
     bool need_html = false;
+    bool read_errors = false;
 
     DEBUG_config("read FilterGroups");
     if (o.filter.use_group_names_list) {
@@ -643,9 +649,12 @@ bool LOptionContainer::readFilterGroupConf()
             DEBUG_debug("Group name: ", groupname);
         }
         if (!readAnotherFilterGroupConf(file.toCharArray(), groupname.toCharArray(), need_html, i)) {
-            E2LOGGER_error("Error opening filter group config: ", file);
-            return false;
+            E2LOGGER_warning("Error(s) opening or within filter group config: ", file);
+            read_errors = true;
         }
+    }
+    if (read_errors && o.lists.abort_on_missing_list) {
+        return false;
     }
     return true;
 }
