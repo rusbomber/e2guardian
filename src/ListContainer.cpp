@@ -109,10 +109,10 @@ void ListContainer::reset() {
     bannedpfiledate = 0;
     exceptionpfiledate = 0;
     weightedpfiledate = 0;
+    read_errors = false;
     if (is_iplist) {
         iplist.clear();
         iprangelist.clear();
-    //    ipsubnetlist.clear();
     }
 }
 
@@ -336,7 +336,7 @@ bool ListContainer::addToItemListPhrase(const char *s, size_t len, int type, int
 
 //bool ListContainer::ifsreadItemList(std::istream *input, const char *list_pwd, int len, bool checkendstring, const char *endstring, bool do_includes, bool startswith, int filters)
 bool
-ListContainer::ifsreadItemList(std::istream *input, String basedir, const char *list_pwd, int len, bool checkendstring,
+ListContainer::ifsreadItemList(const char *filename, std::istream *input, String basedir, const char *list_pwd, int len, bool checkendstring,
                                const char *endstring, bool do_includes, bool startswith, int filters) {
     unsigned int mem_used = 2;
     RegExp re;
@@ -428,8 +428,14 @@ ListContainer::ifsreadItemList(std::istream *input, String basedir, const char *
                     inc = inc2;
                 }
                 inc.fullPath(basedir);
-                if (!readAnotherItemList(inc.toCharArray(), list_pwd, startswith, filters)) { // read it
-                    return false;
+                int list_no = -1;
+                if (!readAnotherItemList(inc.toCharArray(), list_pwd, startswith, filters, list_no)) { // read it
+                    read_errors = true;
+             //       return false;
+                } else {
+                    if ( list_no > -1 && o.lm.l[list_no]->read_errors ) {
+                        read_errors = true;
+                    }
                 }
             }
             continue;
@@ -584,6 +590,10 @@ ListContainer::ifsreadItemList(std::istream *input, String basedir, const char *
             return false;
     }
 
+    if(read_errors) {
+        E2LOGGER_warning("**List Error** There are read failures in some lists included in ", filename);
+    }
+
     return true; // sucessful read
 }
 
@@ -598,7 +608,7 @@ bool ListContainer::ifsReadSortItemList(std::ifstream *input, String basedir, co
         return false;
     }
     bool ret;
-    ret = ifsreadItemList(input, basedir, list_pwd, len, checkendstring, endstring, do_includes, startswith, filters);
+    ret = ifsreadItemList(filename,input, basedir, list_pwd, len, checkendstring, endstring, do_includes, startswith, filters);
     if (ret) {
         doSort(startswith);
         return true;
@@ -624,17 +634,18 @@ bool ListContainer::readItemList(const char *filename, const char *list_pwd, boo
     else is_map = false;
 
     if (sourcefile.startsWithLower("memory:"))
-        return readStdinItemList(startswith, filters);
+        return readStdinItemList(startswith, filters, filename);
     std::string linebuffer;
     DEBUG_config(filename);
 
     //struct stat s;
     filedate = getFileDate(filename);
     size_t len = 0;
+    if (filedate == 0) return false;
     try {
         len = getFileLength(filename);
     } catch (std::runtime_error &e) {
-        E2LOGGER_error("Error reading file ", filename, ": ", e.what());
+        E2LOGGER_error("*List Error* opening file ", filename, ": ", e.what());
         return false;
     }
     if (len < 2) {
@@ -643,14 +654,14 @@ bool ListContainer::readItemList(const char *filename, const char *list_pwd, boo
     }
     std::ifstream listfile(filename, std::ios::in);
     if (!listfile.good()) {
-        E2LOGGER_error("Error opening: ", filename);
+        E2LOGGER_error("*List Error* opening: ", filename);
         return false;
     }
     String base_dir(filename);
     base_dir.baseDir();
-    if (!ifsreadItemList(&listfile, base_dir, list_pwd, len, false, NULL, true, startswith, filters)) {
+    if (!ifsreadItemList(filename,&listfile, base_dir, list_pwd, len, false, NULL, true, startswith, filters)) {
         listfile.close();
-        E2LOGGER_error("Error reading: ", filename);
+        E2LOGGER_error("*List Error* while reading: ", filename);
         return false;
     }
     listfile.close();
@@ -658,7 +669,7 @@ bool ListContainer::readItemList(const char *filename, const char *list_pwd, boo
 }
 
 // for stdin item lists - read item list from stdin
-bool ListContainer::readStdinItemList(bool startswith, int filters) {
+bool ListContainer::readStdinItemList(bool startswith, int filters, const char *filename) {
     if (filters != 32)
         DEBUG_config("Converting to lowercase");
     std::string linebuffer;
@@ -675,7 +686,7 @@ bool ListContainer::readStdinItemList(bool startswith, int filters) {
         return false;
     }
 
-    if (!ifsreadItemList(&std::cin, "", "",  len, true, "#ENDLIST", false, startswith, filters)) {
+    if (!ifsreadItemList(filename, &std::cin, "", "",  len, true, "#ENDLIST", false, startswith, filters)) {
         E2LOGGER_error("Error reading stdin: ");
         return false;
     } else
@@ -684,10 +695,10 @@ bool ListContainer::readStdinItemList(bool startswith, int filters) {
 
 
 // for item lists - read nested item lists
-bool ListContainer::readAnotherItemList(const char *filename, const char *list_pwd, bool startswith, int filters) {
-    int result = o.lm.newItemList(filename, list_pwd, startswith, filters, false, is_iplist, is_timelist, is_map);
+bool ListContainer::readAnotherItemList(const char *filename, const char *list_pwd, bool startswith, int filters, int &result) {
+    result = o.lm.newItemList(filename, list_pwd, startswith, filters, false, is_iplist, is_timelist, is_map);
     if (result < 0) {
-        E2LOGGER_error("Error opening file: ", filename);
+        //E2LOGGER_error("*List Error* unable to read file: ", filename);
         return false;
     }
     morelists.push_back((unsigned) result);
@@ -1948,16 +1959,16 @@ time_t getFileDate(const char *filename) {
     int rc = stat(filename, &status);
     if (rc != 0) {
         if (errno == ENOENT) {
-            E2LOGGER_error("Error reading ",filename, ". Check directory and file permissions. They should be 640 and 750: ", strerror(errno));
+            E2LOGGER_error("*List Error* opening ",filename, ":", strerror(errno));
             return 0;
         }
         // If there are permission problems, just reload the file (CN)
         if (errno == EACCES) {
-            E2LOGGER_error("Error reading ", filename, ". Check directory and file permissions and ownership. They should be 640 and 750 and readable by the e2guardian user: ", strerror(errno));
+            E2LOGGER_error("*List Error* opening ", filename, ". Check directory and file permissions and ownership. They should be 750 and 640 and readable by the e2guardian user: ", strerror(errno));
             return 0;
         }
         else {
-            E2LOGGER_error("Error reading ", filename, ". Check directory and file permissions and ownership. They should be 750 and 640 and readable by the e2guardian user: ", strerror(errno));
+            E2LOGGER_error("*List Error* opening ", filename, ". Check directory and file permissions and ownership. They should be 750 and 640 and readable by the e2guardian user: ", strerror(errno));
             return 0;
             //return sysv_kill(o.pid_filename);
         }

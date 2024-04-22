@@ -1033,7 +1033,7 @@ void PluginOptions::deletePlugins(std::deque<Plugin *> &list) {
 bool OptionContainer::createLists(int load_id) {
     DEBUG_config("create Lists: ", load_id);
     std::shared_ptr <LOptionContainer> temp(new LOptionContainer(load_id));
-    if (temp->loaded_ok) {
+    if (!(temp->is_fatal) && temp->sb_loaded_ok && (temp->loaded_ok || !lists.abort_on_missing_list)) {
         current_LOC = temp;
         return true;
     }

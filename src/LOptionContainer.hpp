@@ -55,7 +55,9 @@ class LOptionContainer
     StoryBoard StoryA;
     //ListManager lm;
     FOptionContainer **fg = nullptr;
-    bool loaded_ok;
+    bool loaded_ok = true;
+    bool is_fatal = false;
+    bool sb_loaded_ok = true;
     int reload_id;
     int numfg = 0;
     String start_time;

@@ -124,6 +124,7 @@ public:
     // search term blocking
     unsigned int searchterm_list;
     bool searchterm_flag = false;
+    bool read_errors = false;
 
     FOptionContainer()
             :  searchterm_flag(false), banned_page(NULL)

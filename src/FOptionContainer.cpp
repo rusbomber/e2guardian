@@ -609,67 +609,67 @@ bool FOptionContainer::read(const char *filename) {
         {
             std::deque<String> dq = findoptionM("ipsitelist");
             DEBUG_debug("ipsitelist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_IPSITE, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_IPSITE, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("iplist");
             DEBUG_debug("iplist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_IP, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_IP, dq))read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("timelist");
             DEBUG_debug("timelist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_TIME, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_TIME, dq))read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("sitelist");
             DEBUG_debug("sitelist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_SITE, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_SITE, dq))read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("urllist");
             DEBUG_debug("urllist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_URL, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_URL, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("searchlist");
             DEBUG_debug("searchlist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_SEARCH, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_SEARCH, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("fileextlist");
             DEBUG_debug("fileextlist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_FILE_EXT, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_FILE_EXT, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("mimelist");
             DEBUG_debug("mimelist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_MIME, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_MIME, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("regexpboollist");
             DEBUG_debug("regexpboollist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_REGEXP_BOOL, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_REGEXP_BOOL, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("regexpreplacelist");
             DEBUG_debug("regexpreplacelist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_REGEXP_REP, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_REGEXP_REP, dq)) read_errors = true;
         }
 
         {
             std::deque<String> dq = findoptionM("categorylist");
             DEBUG_debug("categorylist deque is size ", String(dq.size()) );
-            if(!LMeta.load_type(LIST_TYPE_CATEGORY, dq)) return false;
+            if(!LMeta.load_type(LIST_TYPE_CATEGORY, dq)) read_errors = true;
         }
 
 
@@ -718,6 +718,10 @@ bool FOptionContainer::read(const char *filename) {
         }
 
         DEBUG_trace("Lists in memory");
+        if(read_errors) {
+            E2LOGGER_warning("***List Error*** Reading of some lists defined or included in lists defined in ",filename, " failed" );
+            if(o.lists.abort_on_missing_list) return false;
+        }
 
         DEBUG_trace("Read Storyboard");
         if (!StoryB.readTopFile(storyboard_location.c_str(), LMeta,lang_list_ptr))

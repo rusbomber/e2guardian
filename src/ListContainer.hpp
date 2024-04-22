@@ -121,6 +121,7 @@ class ListContainer
     String category;
     //String lastcategory;
     std::vector<int> morelists; // has to be non private as reg exp compiler needs to access these
+    bool read_errors = false;
 
 
     ListContainer();
@@ -129,10 +130,10 @@ class ListContainer
     void reset();
 
     bool readPhraseList(const char *filename, bool isexception, int catindex = -1, int timeindex = -1, bool incref = true, int nlimit=0);
-    bool ifsreadItemList(std::istream *input, String basedir, const char *list_pwd, int len, bool checkendstring, const char *endstring, bool do_includes, bool startswith, int filters);
+    bool ifsreadItemList(const char *filename,std::istream *input, String basedir, const char *list_pwd, int len, bool checkendstring, const char *endstring, bool do_includes, bool startswith, int filters);
     bool ifsReadSortItemList(std::ifstream *input, String basedir, const char *list_pwd, bool checkendstring, const char *endstring, bool do_includes, bool startswith, int filters, const char *filename);
     bool readItemList(const char *filename, const char *pwd, bool startswith, int filters, bool isip = false, bool istime = false, bool ismap = false);
-    bool readStdinItemList(bool startswith, int filters);
+    bool readStdinItemList(bool startswith, int filters, const char *filename);
     bool inList(const char *string, String &lastcategory);
     bool inListEndsWith(const char *string, String &lastcategory);
     bool inListStartsWith(const char *string, String &lastcategory);
@@ -242,7 +243,7 @@ class ListContainer
     //timelists
     std::vector<TimeLimit> timelist;
 
-    bool readAnotherItemList(const char *filename, const char *list_pwd, bool startswith, int filters);
+    bool readAnotherItemList(const char *filename, const char *list_pwd, bool startswith, int filters, int &list_no);
 
     void readPhraseListHelper(String line, bool isexception, int catindex, int timeindex, int &nlimit);
     void readPhraseListHelper2(String phrase, int type, int weighting, int catindex, int timeindex);

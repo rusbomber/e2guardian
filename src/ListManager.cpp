@@ -120,10 +120,11 @@ int ListManager::newItemList(const char *filename, const char *pwd, bool startsw
     }
     return free;
 }
-
+#ifdef NOTDEF
 // load list from stdin
 int ListManager::newStdinItemList(bool startswith, int filters, bool parent)
 {
+    char *filename;
     // find an empty list slot, create a new listcontainer, and load the list
     int free = findNULL();
     if (free > -1) {
@@ -133,13 +134,14 @@ int ListManager::newStdinItemList(bool startswith, int filters, bool parent)
         free = l.size() - 1;
     }
     (*l[free]).parent = parent;
-    if (!(*l[free]).readStdinItemList(startswith, filters)) {
+    if (!(*l[free]).readStdinItemList(startswith, filters, filename)) {
         delete l[free];
         l[free] = NULL;
         return -1;
     }
     return free;
 }
+#endif
 
 // create a new phrase list. check dates on top-level list files to see if a reload is necessary.
 // note: unlike above, doesn't automatically call readPhraseList.
