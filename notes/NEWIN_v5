@@ -238,6 +238,19 @@ OTHER enhancements
 
      Amend dnsauth to accept fg group names as well as fg group nummbers
 
+   MITM certificate generation improved
+
+    Change default generatedcertstart to 1st Apr 2024
+    Change method of generating Certificate serial numbers
+
+    When generating Serial numbers from host names a hash os the rootCA,
+    start_date and end_date is added to the CN to produce a unique serial
+    number.  This means that the serial number for a host will change if
+    the rootCA or start/end date is changed.  This will force a re-generation
+    of the certificate.
+
+    The generated cert store should be cleared to remove the now stale
+    certificates previously generated.
 
 TESTING -  
 ---------
@@ -248,7 +261,7 @@ TESTING -
 TO DO IN THIS RELEASE
 ---------------------
 
-    Re-look at MITM certificate generation.
+
 
 TODO - for later releases.
 -----------------------
