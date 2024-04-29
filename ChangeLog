@@ -1,5 +1,47 @@
 About "Bug" tags show "https://github.com/e2guardian/e2guardian/issues?q=is%3Aissue+is%3Aclosed" 
 
+version 5.5.5r
+
+September 2023 to April 2024
+
+    Fix #809 Reading <include> files not respecting abortiflistmissing = off settina
+      Also improve list error reporting to show list files and configuration files
+      that have failing <include> files under their tree.
+    Fix #807  __CONFFILE defined twice
+
+    Change default generatedcertstart to 1st Apr 2024
+    Change method of generating Certificate serial numbers #631
+    
+      When generating Serial numbers from host names a hash of the rootCA,
+      start_date and end_date is added to the CN and hashed to produce a unique serial
+      number.  This means that the serial number for a host will change if
+      the rootCA or start/end date is changed.  This will force a re-generation
+      of the certificate.
+    
+      The generated cert store should be cleared to remove the now stale
+      certificates previously generated.
+
+    Fix openssl dependency in configure - issue #806
+    Fix for bug #804 - Logger build error
+    Merge pull request #796 from sunweaver/pr/typo-fixes-5.5
+       NEWIN_{v4,v5},configs/e2guardian*.conf.in}: Various typo fixes.
+    Fix issue #799 - write PID file in parent process rather than deomon child
+    Merge pull request #795 from sunweaver/pr/maxcontentramcachesize-regression-v5.4-v5.5
+    {configs/e2guardian.conf.in,src/OptionContainer.cpp}: Make sure values of maxcontentfiltersize 
+       and maxcontentramcachesize obey to the requirements in the (inline) documentation.
+    Fix for #794 - Bad headers in whatsapp requestsi cause crash
+    Upgrade to Debian12 in CI/CD
+    Fix #792 - dstat output buffer may be too small - buffer size increased to 200
+    Fix #790  - error in lists/common/Makefile.am
+    Add ICAP client notes
+    Update example config files documentation
+    Fix #788 Rest of header not being output when keep-alive triggered
+    Fix #786 - request log not writing
+    Move debuglevel to be read earlier - so that log settings can be debuged
+    Fix #785 BYPASS not working in v5.5 also bypass log messages
+    Fix #783 - command line option -N being ignored
+    Add Spanish translation for message: 122
+
 version 5.5.4r
 
 August 2023

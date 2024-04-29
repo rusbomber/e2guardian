@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(v5_5)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS -DHAVE_CONFIG_H)
+set(CMAKE_CXX_FLAGS -DHAVE_CONFIG_H -D__LOGLOCATION -D__PIDDIR -D__PROXYUSER -D__PROXYGROUP -D__CONFDIR)
 
 include_directories(.)
 include_directories(src)
