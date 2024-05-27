@@ -14,8 +14,8 @@
 # Pornography, Modelling and Adult Sites
 ######################################################
 
-#\b(big|cyber|hard|huge|mega|small|soft|super|tiny|bare|naked|nude|anal|oral|topp?les|sex|phone)+\b.*\b(anal|babe|bharath|boob|breast|busen|busty|clit|cum|cunt|dick|fetish|fuck|girl|hooter|lez|lust|naked|nude|oral|orgy|penis|porn|porno|pupper|pussy|rotten|sex|shit|smutpump|teen|tit|topp?les|xxx)s\b?
-#\b(anal|babe|bharath|boob|breast|busen|busty|clit|cum|cunt|dick|fetish|fuck|girl|hooter|lez|lust|naked|nude|oral|orgy|penis|porn|porno|pupper|pussy|rotten|sex|shit|smutpump|teen|tit|topp?les|xxx)+\b.*\b(big|cyber|hard|huge|mega|small|soft|super|tiny|bare|naked|nude|anal|oral|topp?les|sex)\b+
+#\b(big|cyber|(?<!ric)hard|huge|mega|small|soft|super|tiny|bare|naked|nude|anal(?!yt|ys)|(?<!m)oral|topp?les|sex(?!p|tra)|phone)+\b.*\b(anal(?!yt|ys)|babe|bharath|boob|breast|busen|busty|clit|(?<!do)cum|cunt|dick|fetish|fuck|girl|hooter|lez|(?<!c)lust|naked|nude|(?<!m)oral|orgy|penis|porn|porno|pupper|pussy|rotten|sex(?!p|tra)|shit|smutpump|teen|(?<!iden)tit(?!ion)|topp?les|xxx)s\b?
+#\b(anal(?!yt|ys)|babe|bharath|boob|breast|busen|busty|clit|(?<!do)cum|cunt|dick|fetish|fuck|girl|hooter|lez|(?<!c)lust|naked|nude|(?<!m)oral|orgy|penis|porn|porno|pupper|pussy|rotten|sex(?!p|tra)|shit|smutpump|teen|(?<!iden)tit(?!ion)|topp?les|xxx)+\b.*\b(big|cyber|(?<!ric)hard|huge|mega|small|soft|super|tiny|bare|naked|nude|anal(?!yt|ys)|(?<!m)oral|topp?les|sex(?!p|tra))\b+
 
 #HardCore phrases
 #(adultsight|adultsite|adultsonly|adultweb|blowjob|bondage|centerfold|cumshot|cyberlust|cybercore|hardcore|masturbat)
