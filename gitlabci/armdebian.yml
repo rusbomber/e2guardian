@@ -1,6 +1,7 @@
 build:arm:
   stage: build
   image: debian:bookworm-slim
+  resource_group: builddeb
   artifacts:
    expire_in: 30 minutes
    paths:
