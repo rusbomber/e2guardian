@@ -1,6 +1,7 @@
 build:jammy:
   stage: build 
   image: amd64/ubuntu:22.04
+  resource_group: buildub
   artifacts:
    expire_in: 30 minutes
    paths:
