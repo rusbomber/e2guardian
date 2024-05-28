@@ -1,5 +1,6 @@
 build:debian:
   stage: build-debian
+  resource_group: builddeb
   artifacts:
    expire_in: 30 minutes
    paths:
