@@ -1,5 +1,6 @@
 build:debian:
   stage: build-debian
+  resource_group: builddeb
   artifacts:
    expire_in: 30 minutes
    paths:
@@ -23,7 +24,7 @@ package:debian:
   stage: create-package-debian
   image: amd64/debian:bookworm-slim
   artifacts:
-   expire_in: 30 minutes
+   expire_in: 60 minutes
    paths:
     - $CI_PROJECT_DIR 
   variables:
