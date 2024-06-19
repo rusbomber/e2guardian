@@ -3036,7 +3036,7 @@ int ConnectionHandler::handleProxyTLSConnection(Socket &peerconn, String &ip, So
                 //if(o.log_requests)
                 if (e2logger.isEnabled(LoggerSource::requestlog)) {
                     std::string fnt = "THTTPS";
-                    doRQLog(clientuser, clientip, checkme, fnt);
+                    doLog(clientuser, clientip, checkme, true, fnt);
                 }
 
                 checkme.clientip = clientip;
