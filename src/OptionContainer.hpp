@@ -55,6 +55,7 @@ struct AccessLogOptions
     bool log_timestamp = false;
     bool log_user_agent = false;
     bool use_dash_for_blanks = true;
+    bool addECHtoFlags = false;
     unsigned int max_logitem_length = 2000;
 
     std::string dns_user_logging_domain;  // TODO: not documented ??

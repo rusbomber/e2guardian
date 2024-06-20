@@ -206,6 +206,7 @@ bool OptionContainer::findAccessLogOptions(ConfigReader &cr)
     log.log_client_host_and_ip = cr.findoptionB("logclientnameandip");
 
     log.log_exception_hits = cr.findoptionIWithDefault("logexceptionhits", 0, 2, 2);
+    log.addECHtoFlags = cr.findoptionB("addECHtoFlags");
 
     log.log_client_hostnames = cr.findoptionB("logclienthostnames");
     conn.reverse_client_ip_lookups = log.log_client_hostnames;  // TODO: reverse_client_ip_lookups could be done in log thread
