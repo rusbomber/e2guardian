@@ -190,6 +190,7 @@ DEBUG_config("Loading AccessLogOptions...");
     log.anonymise_logs = cr.findoptionB("anonymizelogs");
     log.log_ad_blocks = cr.findoptionB("logadblocks");
     log.log_exception_hits = cr.findoptionIWithDefault("logexceptionhits", 0, 2, 2);
+    log.addECHtoFlags = cr.findoptionB("addECHtoFlags");
 
   //  log.log_timestamp = cr.findoptionB("logtimestamp"); // redundant
     if(cr.findoptionB("logtimestamp")) { // redundant

@@ -53,6 +53,7 @@ struct AccessLogOptions
     bool anonymise_logs = false;
 
     bool log_ad_blocks = false;
+    bool addECHtoFlags = false;
 
     unsigned int max_logitem_length = 2000;
 

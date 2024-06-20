@@ -1041,6 +1041,10 @@ String NaughtyFilter::getFlags() {
                 flags += "P";
         }
 
+        if (o.log.addECHtoFlags && hasECH) {
+            flags += "E";
+        }
+
         if (ismitm)
             flags += "M";
         else if (isconnect)
