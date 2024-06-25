@@ -675,6 +675,7 @@ DEBUG_trace("Building log line..." );
                 switch(i->code) {
                     case LogFormat::WHAT_COMBI:
                         what = T->what_is_naughty;
+                        // Note no break here - so that ACTIONWORD prefix is generated for COMBI
                     case LogFormat::ACTIONWORD:
                         if (T->is_naughty) {
                             if (T->upfailure)
@@ -708,6 +709,8 @@ DEBUG_trace("Building log line..." );
                         break;
                     case LogFormat::AUTHROUTE:
                         section = T->extflags.after(":").after(":");
+                        break;
+                    case LogFormat::BLANK:
                         break;
                     case LogFormat::BSIZE:
                         temp1 = T->docsize;
@@ -789,9 +792,25 @@ DEBUG_trace("Building log line..." );
                     case LogFormat::PROXYSERVICE:
                         section = T->extflags.after(":").before(":");
                         break;
+                    case LogFormat::REQHEADER:
+                        for (auto p : T->reqh_needed_list) {
+                            if (p.startsWithLower(i->header_name)) {
+                                section = p.after(":");
+                                break;
+                            }
+                        }
+                        break;
                     case LogFormat::REQUESTID:
                         section += T->request_id;
                         break;
+                    case LogFormat::RESHEADER:
+                        for (auto p : T->resh_needed_list) {
+                            if (p.startsWithLower(i->header_name)) {
+                                section = p.after(":");
+                                break;
+                            }
+                            break;
+                        }
                     case LogFormat::RQTYPE:
                         section += T->rqtype;
                         break;
@@ -832,22 +851,10 @@ DEBUG_trace("Building log line..." );
                     case LogFormat::USERAGENT:
                         section += T->useragent;
                         break;
-                    case LogFormat::REQHEADER:
-                        for (auto p : T->reqh_needed_list) {
-                            if (p.startsWithLower(i->header_name)) {
-                                section = p.after(":");
-                                break;
-                            }
-                        }
-                            break;
-                    case LogFormat::RESHEADER:
-                        for (auto p : T->resh_needed_list) {
-                            if (p.startsWithLower(i->header_name)) {
-                                section = p.after(":");
-                                break;
-                            }
-                            break;
-                        }
+                    //case LogFormat::WHAT_COMBI:   // Note - this is dealt with before ACTIONWORD as ACTIONWORD needs to also be generated for WHAT_COMBI
+                    case LogFormat::WHATISNAUGHTY:
+                        section = T->what_is_naughty;
+                        break;
                     default:
                         E2LOGGER_error("Internal error - storage for field code ",i->code, " not defined");
                         section = "";

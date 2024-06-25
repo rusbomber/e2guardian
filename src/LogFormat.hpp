@@ -63,9 +63,9 @@ public:
         X(PROXYIP,"ProxyIP"," Upstream proxy IP - was 'heir'",true), \
         X(PROXYSERVICE,"ProxyService","Type of proxy service flag - T= tranparent, P= explict proxy, M= MITM",true), \
         X(REQHEADER,"ReqHeader"," requestheader  ",true), \
+        X(REQUESTID,"RequestId"," request ID - is thread_id + startUtime",true), \
         X(RESHEADER,"ResHeader"," response header",true), \
         X(RQTYPE,"ReqType"," request type ('GET' etc) was 'how'",true), \
-        X(REQUESTID,"RequestId"," request ID - is thread_id + startUtime",true), \
         X(RSCODE,"ResCode","      response code",false), \
         X(SEARCHTERMS,"SearchTerms", "Search Terms",true),  \
         X(SERVER,"Server","Server name",true),  \
