@@ -42,7 +42,7 @@ configuration options.
 5.        "make install" will create the directory structure and install
         all the files in the chosen paths.  For a more efficient
         install, try "make install-strip" which will strip symbol
-	information to the DG binary smaller.
+	information to the E2G binary smaller.
 
 6.        "make clean" will remove the now un-needed object files etc.
 
@@ -50,7 +50,7 @@ configuration options.
         log rotation, optional CGI block page, startup scripts etc.
 
 
-** You can often use "make -j 2" or "make -j 5" to compile DG faster,
+** You can often use "make -j 2" or "make -j 5" to compile E2G faster,
    especially on multiple CPU computers.  As a general rule of thumb,
    use the number of CPUs/cores plus one.
    
@@ -124,11 +124,6 @@ Optional Features:
                           Enable support for the PCRE library
   --enable-lfs[=yes]
                           Enable large file support on 32 bit systems
-  --enable-orig-ip[=no]
-                          Enable support for checking the client's original
-                          destination IP address against HTTP request details
-                          when deployed as a transparent proxy (US-CERT
-                          VU#435052). Currently only works on Linux.
   --enable-clamd[=no]
                           Enable support for the ClamD content scanner
   --enable-avastd[=no]
@@ -140,14 +135,6 @@ Optional Features:
                           scanner
   --enable-commandline[=no]
                           Enable support for command-line content scanners
-  --enable-fancydm[=yes]
-                          Enable support for the fancy download manager
-  --enable-totalblocklist[=no]
-                          Enable support for total block list
-  --enable-trickledm[=no]
-                          Enable support for the trickle download manager
-  --enable-ntlm[=no]
-                          Enable support for the NTLM auth plugin
   --enable-dnsauth[=no]
                           Enable support for the DNS auth plugin
   --enable-email[=no]
@@ -160,8 +147,8 @@ Optional Packages:
 			  do not use PACKAGE (same as --with-PACKAGE=no)
   --with-zlib[=NONE]
                           non-standard search path for zlib library
-  --with-e2debug[=off]
-                          switch on debug build mode
+  --with-debug_high[=on]  switch on high level debug build mode
+  --with-debug_low[=off]  switch on low level debug build mode
   --with-proxyuser[=nobody]
                           name of proxy user
   --with-proxygroup[=nobody]
