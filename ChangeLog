@@ -1,5 +1,33 @@
 About "Bug" tags show "https://github.com/e2guardian/e2guardian/issues?q=is%3Aissue+is%3Aclosed" 
 
+version 5.6.1
+
+May to June 2024
+
+New features
+
+    Add addECHtoFlags option for monitoring purposes
+    Rewrite of SNI extraction code and addition of checkme.hasECH variable
+    Impliment #818 multiple domains/ips in tlsproxycn
+
+Bug fixes
+
+    Fix for bug #821 - Error message being logged when BLANK field type used in log format
+    Fix for #810 - intermitant garbled SNI extraction with THTTPS
+    Fix #817 RegExp::match() issue
+    Fix #819 ICAP send time-out but does not close connection
+    Update expire artifacts ttl
+    Update ubuntujammy.yml
+    Update armdebian.yml
+    Update debianlatest.yml
+    Update armdebian.yml
+    Fix #815 - Change to invoke pthreads_sigmask before creating any threads to
+    fix occational issue of logging stopping
+    Add -funsigned-char to CXXFLAGS to ensure char is unsigned
+    If this is not set causes stack and other issues in some platforms.
+       - Part of issue #810
+    Fix #814 adjustments for LibreSSL and bug fix DEBUG_debug call.
+
 version 5.6.0
 
 August 2023 to April 2024
