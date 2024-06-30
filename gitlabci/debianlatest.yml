@@ -1,5 +1,6 @@
 build:debian:
   stage: build-debian
+  resource_group: builddeb
   artifacts:
    expire_in: 30 minutes
    paths:
@@ -23,7 +24,7 @@ package:debian:
   stage: create-package-debian
   image: amd64/debian:bookworm-slim
   artifacts:
-   expire_in: 30 minutes
+   expire_in: 60 minutes
    paths:
     - $CI_PROJECT_DIR 
   variables:
@@ -45,6 +46,7 @@ package:debian:
     - find ${PACKDST}/ -type f -name "*.in" -delete
     - SIZE=`stat -c %s ${PACKDST}/data` && echo $SIZE && sed -i "s/Installed-Size:.*$/Installed-Size:\ $SIZE/g" ${PACKDST}/control/control
     - VFULL=`${PACKDST}/data/usr/sbin/e2guardian -v | sed -n 1p | cut -d ' ' -f 2` && sed -i "s/Version:.*$/Version:\ $VFULL/g" ${PACKDST}/control/control 
+    - cat ${PACKDST}/control/control
     - echo "export VFULL=$VFULL" >> $CI_PROJECT_DIR/scripts/debian_package/variables
     - cd ${PACKDST} && cd .. && ./rebuild.sh e2"$OS"_package
     - find $CI_PROJECT_DIR -name ".git" -exec rm -r "{}" +
