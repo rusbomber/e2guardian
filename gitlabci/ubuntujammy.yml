@@ -53,6 +53,7 @@ package:jammy:
     - find ${PACKDST}/ -type f -name "*.in" -delete
     - sed -i "s/Version:.*$/Version:\ $VFULL/g" ${PACKDST}/control/control 
     - cd ${PACKDST} && cd .. && ./rebuild.sh e2"$OS"_package
+    - cat ${PACKDST}/control/control
     - rm -rf .git
     - find $CI_PROJECT_DIR -name ".git" -exec rm -r "{}" +
 
