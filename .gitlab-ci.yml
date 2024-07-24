@@ -3,7 +3,7 @@ workflow:
     - if: $CI_COMMIT_BRANCH 
 
 cache:
-  key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
+  key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-test"
 
 stages:
 # At first debian : init variables
