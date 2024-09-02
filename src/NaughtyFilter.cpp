@@ -207,7 +207,7 @@ void NaughtyFilter::checkme(const char *rawbody, off_t rawbodylen, const String 
     off_t hexdecodedlen = rawbodylen;
     const char *hexdecoded = rawbody;
 
-    unsigned char c;
+    unsigned char c='\0';
 
     // Hex decode content if desired
     // Do this now, as it's not especially case-sensitive,
@@ -221,7 +221,7 @@ void NaughtyFilter::checkme(const char *rawbody, off_t rawbodylen, const String 
         unsigned char c2;
         unsigned char c3;
         char hexval[5] = "0x"; // Initializes a "hexadecimal string"
-        hexval[4] = '\0';
+        hexval[4] = '\0';  //TODO: should this not be hexval[2]??? - No this is correct but inefficient
         char *ptr; // pointer required by strtol
 
         // make a copy of the escaped document char by char
