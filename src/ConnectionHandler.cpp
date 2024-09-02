@@ -2016,9 +2016,12 @@ void ConnectionHandler::contentFilter(HTTPHeader *docheader, HTTPHeader *header,
         if (!checkme->isItNaughty && !checkme->isException && !isbypass && (dblen <= o.content.max_content_filter_size)
             && !docheader->authRequired() && (docheader->OKtoFilterMime(ldl->fg[filtergroup]))) {
             DEBUG_debug(" -Start content filtering: ");
-            checkme->checkme(docbody->data, docbody->buffer_length, &url, &domain,
-                             ldl->fg[filtergroup], ldl->fg[filtergroup]->banned_phrase_list,
-                             ldl->fg[filtergroup]->naughtyness_limit);
+        //    checkme->checkme(docbody->data, docbody->buffer_length, &url, &domain,
+        //                     ldl->fg[filtergroup], ldl->fg[filtergroup]->banned_phrase_list,
+        //                     ldl->fg[filtergroup]->naughtyness_limit);
+              checkme->checkme(docbody->data, docbody->data_length, &url, &domain,
+                                 ldl->fg[filtergroup], ldl->fg[filtergroup]->banned_phrase_list,
+                                 ldl->fg[filtergroup]->naughtyness_limit);
             DEBUG_debug(" -Done content filtering");
         }
 
@@ -3221,13 +3224,13 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
     unsigned short int sid_len = bytes[43];
     curr = bytes + 1 + 43 + sid_len;        // skip past session id
     if (curr > ebytes) return false;
-    unsigned short cslen = two_bytes_to_short(curr); ntohs(*(unsigned short*)curr);
+    unsigned short cslen = two_bytes_to_short(curr);
     curr += 2 + cslen;                      // skip past Cipher Suites
     if (curr > ebytes) return false;
     unsigned short cmplen = *curr;
     curr += 1 + cmplen;                     // skip past Compression methods
     if (curr > ebytes) return false;
-    unsigned char *maxchar = curr + 2 + two_bytes_to_short(curr); ntohs(*(unsigned short*)curr);  // get pointer to end of extensions + 1
+    unsigned char *maxchar = curr + 2 + two_bytes_to_short(curr);   // get pointer to end of extensions + 1
     curr += 2;
     unsigned short ext_type = 1;
     unsigned short ext_len;
