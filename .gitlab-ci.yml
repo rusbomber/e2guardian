@@ -5,6 +5,9 @@ workflow:
 cache:
   key: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
 
+variables:
+  GIT_CLONE_PATH: $CI_BUILDS_DIR/tmpfs/$CI_PROJECT_NAME/$CI_COMMIT_BRANCH
+
 stages:
 # At first debian : init variables
 - quality 
@@ -37,4 +40,5 @@ include:
   - 'gitlabci/docker-hub-arm.yml'
   - 'gitlabci/docker-hub.yml'
   - 'gitlabci/ubuntujammy.yml'
+  - 'gitlabci/ubuntunoble.yml'
   - 'gitlabci/armdebian.yml'

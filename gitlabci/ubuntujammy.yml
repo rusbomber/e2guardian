@@ -17,7 +17,7 @@ build:jammy:
       mount util-linux libc6-dev libc-dev gcc g++ make dpkg-dev autotools-dev debhelper dh-autoreconf dpatch
       libclamav-dev libpcre3-dev zlib1g-dev pkg-config libssl-dev libssl3 git ca-certificates lsb-release
     - cd $CI_PROJECT_DIR && make clean && ./autogen.sh && ./configure  '--prefix=/usr' '--enable-clamd=yes' '--with-proxyuser=e2guardian' '--with-proxygroup=e2guardian' '--sysconfdir=/etc' '--localstatedir=/var' '--enable-icap=yes' '--enable-commandline=yes' '--enable-email=yes' '--enable-ntlm=yes' '--mandir=${prefix}/share/man' '--infodir=${prefix}/share/info' '--enable-pcre=yes' '--enable-sslmitm=yes' 'CPPFLAGS=-mno-sse2 -g -O2'
-    - make 
+    - make -j 4
     - find $CI_PROJECT_DIR -name ".git" -exec rm -r "{}" +
 
 package:jammy:
@@ -53,6 +53,7 @@ package:jammy:
     - find ${PACKDST}/ -type f -name "*.in" -delete
     - sed -i "s/Version:.*$/Version:\ $VFULL/g" ${PACKDST}/control/control 
     - cd ${PACKDST} && cd .. && ./rebuild.sh e2"$OS"_package
+    - cat ${PACKDST}/control/control
     - rm -rf .git
     - find $CI_PROJECT_DIR -name ".git" -exec rm -r "{}" +
 
