@@ -556,6 +556,7 @@ void DataBuffer::zlibinflate(bool header)
     data = new char[bytesgot + 1];
     data[bytesgot] = '\0';
     memcpy(data, block, bytesgot);
+    data_length = bytesgot;
     delete[] block;
 }
 
