@@ -371,7 +371,7 @@ int Socket::startSslClient(const std::string &certificate_path, String hostname)
         return -2;
     }
 
-    //X509_VERIFY_PARAM_free(x509_param);     // try not freeing this as SSL_CTX_free seems to be ring to free it
+    X509_VERIFY_PARAM_free(x509_param);     // try not freeing this as SSL_CTX_free seems to be trying to free it - PIP - 4/09/24 v5.5 seems OK now - valgrind complains if it is not freed.
 
     //hand socket over to ssl lib
     ERR_clear_error();
