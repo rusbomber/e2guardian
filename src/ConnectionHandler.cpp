@@ -680,7 +680,7 @@ int ConnectionHandler::handleConnection(Socket &peerconn, String &ip, bool ismit
                     //int pport = peerconn.getPeerSourcePort();
                     std::string peerIP = peerconn.getPeerIP();
 
-                    E2LOGGER_info("No header recd from client at ", peerIP, " - errno: %d",  err);
+                    E2LOGGER_info("No header recd from client at ", peerIP, " - errno: ",  err);
                 } else {
                     E2LOGGER_info("Client connection closed early - no request header received");
                 }
@@ -3121,13 +3121,14 @@ int ConnectionHandler::handleProxyTLSConnection(Socket &peerconn, String &ip, So
 
                   //  unsigned int t3 = buff[4];
                   //  toread = (toread * 256) + t3;
-                    if (toread <= CLIENT_HELLO_MAX_SIZE) {
+                    if ((toread <= CLIENT_HELLO_MAX_SIZE)&&(toread > 52)) {
                         checkme.isTLS = true;
                         toread += 5;
                     }
 #ifdef DEBUG_HIGH
                     else {
-                        DEBUG_thttps("Oversized clienthello detected");
+                        //toread = CLIENT_HELLO_MAX_SIZE + 5;
+                        DEBUG_thttps("Too small or Oversized clienthello detected");
                     }
 #endif
                     //toread = (buff[3] << (8 * 1) | buff[4]) + 5;
@@ -3393,14 +3394,14 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
     char sni[256];
     std::memset(sni,0,256);
     bool got_sni = false;
-    if (len < 44) return false;
+    if (len < 52) return false;
     ebytes = bytes + len;
     unsigned short int sid_len = bytes[43];
     curr = bytes + 1 + 43 + sid_len;        // skip past session id
-    if (curr > ebytes) return false;
+    if ((curr + 2) > ebytes) return false;
     unsigned short cslen = two_bytes_to_short(curr);
     curr += 2 + cslen;                      // skip past Cipher Suites
-    if (curr > ebytes) return false;
+    if ((curr + 1) > ebytes) return false;
     unsigned short cmplen = *curr;
     curr += 1 + cmplen;                     // skip past Compression methods
     if (curr > ebytes) return false;
@@ -3409,16 +3410,18 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
     unsigned short ext_type = 1;
     unsigned short ext_len;
     unsigned short ext_found = 0;
+    unsigned char *ext_end;
     while(curr < maxchar && ext_found < 2)
         //while(curr < maxchar && ext_type != 0)
     {
         if (curr > ebytes) break;
         //if (maxchar > ebytes) return nullptr;
-        ext_type = ntohs(*(unsigned short*)curr);
+        ext_type = two_bytes_to_short(curr);
         curr += 2;
-        if (curr > ebytes) break;
-        ext_len = ntohs(*(unsigned short*)curr);
+        if ((curr + 2) > ebytes) break;
+        ext_len = two_bytes_to_short(curr);
         curr += 2;                      // pointing at start of extension data
+        ext_end = curr + ext_len;
                 switch (ext_type) {
                     case 0:             // Is Server name extension
                     {
@@ -3437,7 +3440,7 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
                         std::memcpy(sni, curr, (size_t) namelen);
                         got_sni = true;
                         ext_found++;
-                        curr = name_end;
+                        curr = ext_end;   // read only first SNI
                     }
                         break;
                         //*(name_end) = (char)0;     // add null char to terminate string
@@ -3445,7 +3448,7 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
                         is_ech = true;
                         ext_found++;
                     default:
-                        curr += ext_len;
+                        curr = ext_end;
                         break;
                 }
     }
