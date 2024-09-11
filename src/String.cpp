@@ -751,7 +751,9 @@ bool String::isIp() {
 }
 
 bool String::is_valid_domain() {
+    if (this->empty()) return false;
     unsigned int l = this->length();
+    if(l < 4) return false;  // too short - can not possibly be a valid domain!
     const char *d = this->c_str();
     if ((d[0] == '-')||(d[l - 1] == '-')) return false;  // hyphens are not allowed at start or end of domain
     for (unsigned int i = 0; i < l; i++) {

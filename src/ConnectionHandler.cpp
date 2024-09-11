@@ -3437,9 +3437,11 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
                         unsigned char *name_end = curr + namelen;
                         if (name_end > list_end) break;
                         if (name_end > ebytes) break;
-                        std::memcpy(sni, curr, (size_t) namelen);
-                        got_sni = true;
-                        ext_found++;
+                        if (namelen > 3) {      // SNI must be at least 4 bytes
+                            std::memcpy(sni, curr, (size_t) namelen);
+                            got_sni = true;
+                            ext_found++;
+                        }
                         curr = ext_end;   // read only first SNI
                     }
                         break;
