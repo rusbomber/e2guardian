@@ -2958,7 +2958,7 @@ int ConnectionHandler::handleProxyTLSConnection(Socket &peerconn, String &ip, So
                 char buff2[CLIENT_HELLO_MAX_SIZE + 6 ];
                 //char *buff2 = new char[(toread + 1)];
                 rc = peerconn.readFromSocket(buff2, toread, (MSG_PEEK), 10000);
-                if (rc < 1) {
+                if (rc < 52) {
                     if (o.conn.logconerror) {
                         if (peerconn.getFD() > -1) {
 
@@ -3263,7 +3263,7 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
                         unsigned char *name_end = curr + namelen;
                         if (name_end > list_end) break;
                         if (name_end > ebytes) break;
-                        if (namelen > 3) {      // SNI must be at least 4 bytes
+                        if ((namelen > 3) && (namelen < 254)) {      // SNI must be at least 4 bytes and no more than 253
                             std::memcpy(sni, curr, (size_t) namelen);
                             got_sni = true;
                             ext_found++;
