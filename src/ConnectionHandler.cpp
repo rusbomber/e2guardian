@@ -3427,7 +3427,7 @@ bool ConnectionHandler::get_TLS_SNI(char *inbytes, int len, String &r_sni, bool 
                     {
                         unsigned short list_len = two_bytes_to_short(curr);
                         curr += 2;
-                        if (list_len < 8) break;
+                        if (list_len < 7) break;
                         unsigned char *list_end = curr + list_len;
                         if (*curr != 0) break;      // check list entry type is DNS hostname i.e == 0
                         curr += 1;                  // pointing at length of DNS hostname
