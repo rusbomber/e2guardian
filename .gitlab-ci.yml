@@ -3,26 +3,23 @@ workflow:
     - if: $CI_COMMIT_BRANCH 
 
 variables:
-  GIT_CLONE_PATH: $CI_BUILDS_DIR/$CI_PROJECT_NAME/$CI_COMMIT_BRANCH
+  CONTAINER_CLIENT_IMAGE: amd64/debian:bookworm-slim    
 
 stages:
-# At first debian : init variables
 - quality 
 - build-debian
 - create-package-debian
 - test-publish-debian
-### All
 - build
 - create-package
 - test-publish
-# AMD64 docker
 - Docker-hub-build
 - Docker-hub-test
 - Docker-hub-pushtag
-# ARM docker
 - Docker-hub-build-arm
 - Docker-hub-test-arm
 - Docker-hub-pushtag-arm
+- Chatgtp
 
 hadolint:
   image: hadolint/hadolint:latest-debian
@@ -36,6 +33,7 @@ include:
   - 'gitlabci/debianlatest.yml'
   - 'gitlabci/docker-hub-arm.yml'
   - 'gitlabci/docker-hub.yml'
-  - 'gitlabci/ubuntujammy.yml'
-  - 'gitlabci/ubuntunoble.yml'
+  - 'gitlabci/ubuntulatest.yml'
   - 'gitlabci/armdebian.yml'
+  - project: 'fredbcode/chatgpt-ci'
+    file: 'chatgpte2.yml'
