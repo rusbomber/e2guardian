@@ -92,9 +92,12 @@ bool OptionContainer::read_config(const Path &filename, bool readFullConfig) {
         use_xforwardedfor = cr.findoptionB("usexforwardedfor");
         per_room_directory_location = cr.findoptionS("perroomdirectory");
 
-        if (cert.enable_ssl) {
-            if (!cert.generate_ca_certificate()) return false;
-        }
+        // recheck_replaced_urls = cr.findoptionB("recheckreplacedurls");
+        // soft_restart = (findoptionS("softrestart") == "on"); // Unused
+
+       // if (cert.enable_ssl) {
+       //     if (!cert.generate_ca_certificate()) return false;
+       // }
 
     } catch (std::exception &e) {
         E2LOGGER_error(e.what());
@@ -170,7 +173,7 @@ bool OptionContainer::readinStdin() {
     return true;
 }
 
-// PRIVATE 
+// PRIVATE
 
 bool OptionContainer::findAccessLogOptions(ConfigReader &cr)
 {
@@ -273,7 +276,7 @@ bool OptionContainer::findCertificateOptions(ConfigReader &cr)
         if (cr.findoptionB("useopensslconf")) {
             cert.use_openssl_conf = true;
             cert.openssl_conf_path = cr.findoptionS("opensslconffile");
-            cert.have_openssl_conf = (cert.openssl_conf_path == "");
+            cert.have_openssl_conf = (!cert.openssl_conf_path.empty()) ;
         } else {
             cert.use_openssl_conf = false;
         };
@@ -296,6 +299,8 @@ bool OptionContainer::findCertificateOptions(ConfigReader &cr)
             ret = false;
         }
 
+   //     if (!cert.generate_ca_certificate()) return false;
+
         cert.generated_cert_path = cr.findoptionS("generatedcertpath") + "/";
         if (cert.generated_cert_path == "/") {
             E2LOGGER_error("generatedcertpath is required when ssl is enabled");
@@ -305,12 +310,43 @@ bool OptionContainer::findCertificateOptions(ConfigReader &cr)
         //time_t def_start = 1417872951; // 6th Dec 2014
         time_t def_start = 1711926000; // 1st Apr 2024
         time_t ten_years = 315532800;
-        cert.gen_cert_start = cr.findoptionI("generatedcertstart");
-        if (cert.gen_cert_start < def_start)
-            cert.gen_cert_start = def_start;
-        cert.gen_cert_end = cr.findoptionI("generatedcertend");
-        if (cert.gen_cert_end < cert.gen_cert_start)
-            cert.gen_cert_end = cert.gen_cert_start + ten_years;
+        time_t one_year = 31553280;
+
+        String temp = cr.findoptionS("generatedcertstart");
+        if (temp.empty() || temp == "auto") {
+            cert.generated_auto_start_end = true;
+        } else {
+            cert.generated_auto_start_end = false;
+        }
+        if (!cert.generated_auto_start_end) {
+            cert.gen_cert_start = cr.findoptionI("generatedcertstart");
+            if (cert.gen_cert_start < def_start)
+                cert.gen_cert_start = def_start;
+            cert.gen_cert_end = cr.findoptionI("generatedcertend");
+            if (cert.gen_cert_end < cert.gen_cert_start)
+                cert.gen_cert_end = cert.gen_cert_start + ten_years;
+        } else {      // auto generation
+            time_t now;
+            time(&now);
+            struct tm *timeinfo;
+            timeinfo = localtime(&now);
+            if (timeinfo->tm_mon > 5) {
+                timeinfo->tm_mon = 6;
+            } else {
+                timeinfo->tm_mon = 0;
+            }
+            timeinfo->tm_hour = 0;
+            timeinfo->tm_min = 0;
+            timeinfo->tm_sec = 0;
+            timeinfo->tm_mday = 0;
+            cert.gen_cert_start = mktime(timeinfo);
+            cert.gen_cert_end = cert.gen_cert_start + one_year;
+        }
+        if (!cert.generate_ca_certificate()) return false;
+        // now check values against root ca cert and adjust if needed to fall in range
+
+
+        //E2LOGGER_info("gcertstart: ",cert.gen_cert_start, " gcertend:", cert.gen_cert_end);
 
         cert.set_cipher_list = cr.findoptionS("setcipherlist");
         if (cert.set_cipher_list == "")
@@ -1168,6 +1204,8 @@ bool ProcessOptions::daemonise()
 bool CertificateOptions::generate_ca_certificate()
 {
     if (!enable_ssl) return true;
+
+    DEBUG_thttps("in gen_ca_cert gen_cert_start is ",gen_cert_start, " gen_cert_end is ",gen_cert_end);
 
     DEBUG_config("enable SSL");
     if (ca_certificate_path != "") {

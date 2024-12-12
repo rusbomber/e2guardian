@@ -109,6 +109,7 @@ struct CertificateOptions
     time_t gen_cert_start, gen_cert_end;
     bool use_openssl_conf = false;
     bool have_openssl_conf = false;
+    bool generated_auto_start_end = true;
     std::string set_cipher_list;
 
     bool generate_ca_certificate();

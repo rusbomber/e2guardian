@@ -33,17 +33,21 @@ class CertificateAuthority
         const char *caPrivKey,
         const char *certPrivKey,
         const char *certPath,
-        time_t caStart,
-        time_t caEnd);
+        time_t &caStart,
+        time_t &caEnd);
 
     ~CertificateAuthority();
     X509 *generateCertificate(const char *commonname, struct ca_serial *cser, bool is_ip = false);
+    ASN1_TIME *notAfter, *notBefore;
     bool getSerial(const char *commonname, struct ca_serial *cser);
     bool getServerCertificate(const char *commonname, X509 **cert, struct ca_serial *cser, bool is_ip = false);
     bool writeCertificate(const char *hostname, X509 *newCert, struct ca_serial *cser);
     EVP_PKEY *getServerPkey();
     bool free_ca_serial(struct ca_serial *cs);
     String cert_start_stop_hash;
+    bool checkValidNotBefore(time_t &start);
+    bool checkValidNotAfter(time_t &end);
+    void ans1_time_to_time_t(ASN1_TIME *a_time, time_t *t_time);
     //String ASN1TIME2String(ASN1_TIME *atime);
 };
 

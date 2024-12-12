@@ -292,19 +292,32 @@ generatedcertpath = '@E2CONFDIR@/private/generatedcerts/'
 #(must be writable by the e2 user)
 # required if ssl_mitm is enabled.
 
-#Warning: if you change the cert start/end time from default on a running
-#         system it is advisable to clear the generated certificate
-#         store.
+#Warning: it is advisable to prune the generated certificate
+#         store regularly to avoid the 
+#         number of files getting to large and the file system running out
+#	  of inodes.  An example of a script to do this is:
+#	     cd generatedcertpath (replace with actual path on your system)
+#	     find . -atime +7 -delete
+#	  i.e delete all cached certs not accessed in last 7 days
 
-# generatedcertstart = 1711926000
+# generatedcertstart = auto
 #
 #Generated cert start time (in unix time) - optional
-# defaults to 1711926000 = 1st April 2024
+# defaults to auto
+
+# 'auto' will make generatedcertstart time last January or June and
+# generatedcertend 12 months after generatedcertstart.  This ensures 
+# generated certificates are only changed every 6 months while 
+# limiting life to 12 months
 
 # generatedcertend =
 #
 #Generated cert end time (in unix time) - optional
-# defaults to generatedcertstart + 10 years
+# defaults to generatedcertstart + 1 years
+
+# Note: start/end times are now also checked against root dates
+# and where needed adjusted to fit the root cert dates.  A warning is 
+# issued when this happens.
 
 #useopensslconf = off
 #
