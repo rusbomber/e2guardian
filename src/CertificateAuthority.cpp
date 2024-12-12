@@ -48,11 +48,14 @@ CertificateAuthority::CertificateAuthority(const char *caCert,
     const char *caPrivKey,
     const char *certPrivKey,
     const char *certPath,
-    time_t caStart,
-    time_t caEnd)
+    time_t &caStart,
+    time_t &caEnd)
 {
     FILE *fp;
     char pem[7200];
+
+
+    DEBUG_thttps("in new CertAuth gen_cert_start is ",caStart, " gen_cert_end is ",caEnd);
 
     //load the ca cert
     fp = fopen(caCert, "r");
@@ -66,6 +69,51 @@ CertificateAuthority::CertificateAuthority(const char *caCert,
         exit(1);
     }
     fclose(fp);
+
+    // Now check date validity of cert
+    {
+        auto rc = X509_cmp_current_time(X509_get_notBefore(_caCert));
+        if (rc == 1) {
+            E2LOGGER_error("Certificate notBefore is in the future");
+            exit(1);
+        }
+        if (rc == 0) {
+            E2LOGGER_error("Error in checking certificate notBefore");
+            exit(1);
+        }
+        rc = X509_cmp_current_time(X509_get_notAfter(_caCert));
+        if (rc == -1) {
+            E2LOGGER_error("CA root Certificate has expiredi - I need a new certificate");
+            exit(1);
+        }
+        if (rc == 0) {
+            E2LOGGER_error("Error in checking certificate notAfter");
+            exit(1);
+        }
+        notBefore = X509_get_notBefore(_caCert);
+        notAfter = X509_get_notAfter(_caCert);
+        int ex_day = 0;
+        int ex_secs = 0;
+        auto now_time = ASN1_TIME_set(nullptr,time(nullptr));
+        ASN1_TIME_diff(&ex_day,&ex_secs,now_time,notAfter);
+        //Add logic here
+        if (ex_day < 90 ) {
+            E2LOGGER_warning("Root CA Certificate expires in ",ex_day," days - install new cert on clients NOW");
+        }
+        #ifdef DEBUG_HIGH
+        else {
+            DEBUG_thttps("Root CA Certificate expires in ",ex_day," days ");
+        }
+        #endif
+
+        if( !checkValidNotBefore(caStart)) {
+            E2LOGGER_warning("generated_cert_start is too early for CA root cert - adjusted to match CA Root cert notBefore ",caStart);
+        }
+        if( !checkValidNotAfter(caEnd)) {
+            E2LOGGER_warning("generated_cert_end is too late for CA root cert - adjusted to match CA Root cert notAfter ",caEnd);
+        }
+
+    }
 
     // open again to get raw PEM for hash
     fp = fopen(caCert, "r");
@@ -128,6 +176,36 @@ CertificateAuthority::CertificateAuthority(const char *caCert,
      cert_start_stop_hash = tem.md5();
      DEBUG_config("modifing string to be hashed (rootCA.pem + cartstart + certend is: ", tem);
      DEBUG_config("modifing hash is: ", cert_start_stop_hash);
+}
+
+void CertificateAuthority::ans1_time_to_time_t(ASN1_TIME *a_time, time_t *t_time) {
+    int days = 0, secs = 0;
+    ASN1_TIME *aepoch = ASN1_TIME_set(nullptr,0);
+    ASN1_TIME_diff(&days,&secs,aepoch,a_time);
+    if ( days > 0) {
+        *t_time = (days * 60 * 60 * 24) + secs;
+    }
+    return;
+}
+
+bool CertificateAuthority::checkValidNotAfter(time_t &end) {
+    time_t notAfter_t = 0;
+    ans1_time_to_time_t(X509_get_notAfter(_caCert), &notAfter_t);
+    if (notAfter_t < end) {
+        end = notAfter_t;
+        return false;
+    }
+    return true;
+}
+
+bool CertificateAuthority::checkValidNotBefore(time_t &start) {
+    time_t notBefore_t = 0;
+    ans1_time_to_time_t(X509_get_notBefore(_caCert), &notBefore_t);
+    if (notBefore_t > start) {
+        start = notBefore_t;
+        return false;
+    }
+    return true;
 }
 
 bool CertificateAuthority::getSerial(const char *commonname, struct ca_serial *caser)

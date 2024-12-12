@@ -301,7 +301,7 @@ void String::fullPath(String &base_dir) {
 }
 
 // decode %xx to individual characters (checkme: i'm sure this is duplicated elsewhere...)
-void String::hexDecode()
+void String::hexDecode()            //TODO: make this more efficient - use similar login to hex2integer
 {
     if (this->length() < 3)
         return;
