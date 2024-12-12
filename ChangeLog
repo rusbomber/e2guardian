@@ -1,5 +1,20 @@
 About "Bug" tags show "https://github.com/e2guardian/e2guardian/issues?q=is%3Aissue+is%3Aclosed" 
 
+version 5.5.7r
+
+July 2024 to December 2024
+
+    Auto dates for cert generation feature added
+    Add chatgpt ChatGPT Analysis to v5.5
+    Fix bug #831 Minimum SNI record length is 7 (not 8)
+    Remove compilation cache
+    Further work on #827 - oversize domain names now ignored
+    Further bound checks added (relates to #827)
+    Possible fix for #827 - Intermitant crash withj transparent https
+    Fix ssl memleak and out of range access detected by valgrind
+    Fix access to unintialised memory found by valgrind memcheck
+    Fix arm compilation
+
 version 5.5.6r
 
 May 2024 to June 2024
