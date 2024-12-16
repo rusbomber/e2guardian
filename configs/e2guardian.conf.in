@@ -241,11 +241,6 @@ languagedir = '@E2DATADIR@/languages'
 #
 # From v5.5.6 multiple multiple DNS names and/or IP can be can be defined separated by ':'
 
-#proxyport = 3128
-#
-# the port e2guardian connects to any upstream proxy on
-# default 3128
-
 ###
 ### END of NETWORK section
 
