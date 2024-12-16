@@ -38,22 +38,19 @@ function(icap-pre-authcheck)
 #if(clientin,ipmap) return setgroup
 #
 
-function(auth_pf_basic)
-if(userin,defaultusermap) return setgroup
+# Note auth plugins that 'sniff' the traffic to up-stream proxy were
+# removed in v5.5.   
+# If you wnat to use these then put proxy in front of e2g, configure the
+# required auth on the proxy (e.g. squid) with e2g as upstream proxy
+# and use the auth_pf_basic plugin
 
-function(auth_proxy_basic)
+function(auth_pf_basic)
 if(userin,defaultusermap) return setgroup
 
 function(auth_proxy_header)
 if(userin,defaultusermap) return setgroup
 
-function(auth_proxy_ident)
-if(userin,defaultusermap) return setgroup
-
-function(auth_proxy_ntlm)
-if(userin,defaultusermap) return setgroup
-
-function(auth_proxy_digest)
+function(auth_ident)
 if(userin,defaultusermap) return setgroup
 
 function(auth_ip)
